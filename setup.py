@@ -15,7 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
 	install_requires=[
 		"numpy", "matplotlib", "scipy"
-	]
+	],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
