@@ -567,12 +567,16 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
 		
         plt.show()
 			
+def set_ticks_size(fontsize):
+    for tick in plt.gca().xaxis.get_major_ticks():
+        tick.label.set_fontsize(fontsize)
+    for tick in plt.gca().yaxis.get_major_ticks():
+        tick.label.set_fontsize(fontsize)
 
 
 
 
-
-plot_beam()
+#plot_beam()
 
 
 

@@ -49,6 +49,14 @@ def resample_distribution(array_x, array_y, oversampling=2, n_points=0):
     y_int = dist(x_int)
     return x_int, y_int 
 
+
+def derivate(x, y):    
+    diffy = [y[i+1]-y[i] for i in range(len(y)-1)]
+    diffx = [x[i+1]-x[i] for i in range(len(x)-1)]
+    der = [diffy[i]/diffx[i] for i in range(len(diffx))]
+    der.append(der[-1])
+    return np.array(der)
+
 def get_fwhm(x, y, oversampling=1, zero_padding=True, avg_correction=False, 
              inmost_outmost=0, threshold=0.5, npoints=5):
     
@@ -157,5 +165,73 @@ def get_fwhm(x, y, oversampling=1, zero_padding=True, avg_correction=False,
         fwhm = 0.0        
         print("Could not calculate fwhm\n")   
         return [fwhm, 0, 0, 0, 0]
+
+
+def psd(xx, yy, onlyrange = None):
+    """
+     psd: Calculates the PSD (power spectral density) from a profile
+
+      INPUTS:
+           x - 1D array of (equally-spaced) lengths.
+           y - 1D array of heights.
+      OUTPUTS:
+           f - 1D array of spatial frequencies, in units of 1/[x].
+           s - 1D array of PSD values, in units of [y]^3.
+      KEYWORD PARAMETERS:
+           onlyrange - 2-element array specifying the min and max spatial
+               frequencies to be considered. Default is from
+               1/(length) to 1/(2*interval) (i.e., the Nyquist
+               frequency), where length is the length of the scan,
+               and interval is the spacing between points.
+
+      PROCEDURE
+            Use FFT
+
+    """
+    import numpy
+    n_pts = xx.size
+    if (n_pts <= 1):
+        print ("psd: Error, must have at least 2 points.")
+        return 0
+
+    window=yy*0+1.
+    length=xx.max()-xx.min()  # total scan length.
+    delta = xx[1] - xx[0]
+
+    # psd from windt code
+    # s=length*numpy.absolute(numpy.fft.ifft(yy*window)**2)
+    # s=s[0:(n_pts/2+1*numpy.mod(n_pts,2))]  # take an odd number of points.
+
+    #xianbo + luca:
+    s0 = numpy.absolute(numpy.fft.fft(yy*window))
+    s =  2 * delta * s0[0:int(len(s0)/2)]**2/s0.size # uniformed with IGOR, FFT is not symmetric around 0
+    s[0] /= 2
+    s[-1] /= 2
+
+
+    n_ps=s.size                       # number of psd points.
+    interval=length/(n_pts-1)         # sampling interval.
+    f_min=1./length                   # minimum spatial frequency.
+    f_max=1./(2.*interval)            # maximum (Nyquist) spatial frequency.
+    # spatial frequencies.
+    f=numpy.arange(float(n_ps))/(n_ps-1)*(f_max-f_min)+f_min
+
+    if onlyrange != None:
+        roi =  (f <= onlyrange[1]) * (f >= onlyrange[0])
+        if roi.sum() > 0:
+            roi = roi.nonzero()
+            f = f[roi]
+            s = s[roi]
+
+    return s,f
+
+
+
+
+
+
+
+
+
 
 
