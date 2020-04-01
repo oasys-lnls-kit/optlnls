@@ -503,7 +503,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         
         text8 = ''; text9 = ''; text10 = ''; text11 = ''; text12 = ''; # IF FIT IS DISABLED
         
-        text13  = 'I = {0:.2e} ph/s'.format(integral)
+        text13  = 'F = {0:.2e} ph/s'.format(integral)
         
         if(fitType != 0):
             

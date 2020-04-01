@@ -227,6 +227,61 @@ def psd(xx, yy, onlyrange = None):
 
 
 
+def common_region_average(lines):
+    
+    '''
+    lines = [[x0, y0], [x1, y1], ..., [xn-1, yn-1]]
+    
+    '''
+    
+    f_list = []
+    
+    if(lines[1][0][0] - lines[0][0][0] > 0):
+        x_average = np.arange(lines[0][0][0], lines[-1][0][-1], lines[0][0][1] - lines[0][0][0])
+    
+    else:
+        x_average = np.arange(lines[0][0][-1], lines[-1][0][0], - lines[0][0][1] + lines[0][0][0])
+    
+    y_average = []
+    
+    for i in range(len(lines)):
+        
+        f = interp1d(lines[i][0], lines[i][1])
+        
+        f_list.append(f)
+    
+    
+    sum_y = 0
+    
+    n = 0
+    
+    for i in range(len(x_average)):
+        
+        for j in range(len(lines)):
+            
+            try:
+            
+                f = f_list[j]
+                
+                y_interp = f(x_average[i])
+            
+                sum_y = sum_y + y_interp
+                
+                n = n + 1
+                
+            except(ValueError):
+                
+                pass
+        
+        y_average.append(sum_y/n)
+        
+        sum_y = 0
+        
+        n = 0    
+               
+        
+    return x_average, np.array(y_average)
+
 
 
 
