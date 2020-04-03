@@ -226,22 +226,53 @@ def psd(xx, yy, onlyrange = None):
     return s,f
 
 
-
-def common_region_average(lines):
+def common_region_average(lines, force_step=0.0):
     
     '''
     lines = [[x0, y0], [x1, y1], ..., [xn-1, yn-1]]
     
     '''
-    
-    f_list = []
-    
-    if(lines[1][0][0] - lines[0][0][0] > 0):
-        x_average = np.arange(lines[0][0][0], lines[-1][0][-1], lines[0][0][1] - lines[0][0][0])
-    
+        
+    if(force_step != 0):
+
+        step = force_step
+		
     else:
-        x_average = np.arange(lines[0][0][-1], lines[-1][0][0], - lines[0][0][1] + lines[0][0][0])
+	
+	    # Finding the best step:
+
+        step = abs(lines[0][0][1] - lines[0][0][0])
+
+        for i in range(len(lines)):
+            
+            if (abs(lines[i][0][1] - lines[i][0][0]) < step):
+                
+                step = abs(lines[i][0][1] - lines[i][0][0])
+            
     
+    # Finding the position array:
+    
+    x_max = np.max(lines[0][0])
+    
+    x_min = np.min(lines[0][0])
+    
+    for i in range(len(lines)):
+        
+        if (np.max(lines[i][0]) > x_max):
+            
+            x_max = np.max(lines[i][0])
+        
+        if (np.min(lines[i][0]) < x_min):
+            
+            x_min = np.min(lines[i][0])
+            
+    x_average = np.arange(x_min, x_max, step)
+     
+
+    # Calculating average:
+       
+    f_list = []
+
     y_average = []
     
     for i in range(len(lines)):
