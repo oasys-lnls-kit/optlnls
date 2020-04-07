@@ -1,1 +1,1 @@
-#
+# this folder can be used to generate output files for testing. Git will ignore any file other than this.
