@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="optlnls", # Replace with your own username
-    version="0.0.3",
+    version="0.0.4",
     author="Sergio Lordano",
     author_email="sergiolordano2@gmail.com",
     description="X-ray optics utilities",
@@ -14,7 +14,10 @@ setuptools.setup(
     url="https://github.com/SergioLordano/optlnls",
     packages=setuptools.find_packages(),
 	install_requires=[
-		"numpy", "matplotlib", "scipy"
+    	'numpy>=1.18.0',
+    	'scipy>=1.4.1',
+    	'matplotlib>=3.1.2',
+    	'srxraylib>=1.0.28',
 	],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -22,4 +25,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+
 )
