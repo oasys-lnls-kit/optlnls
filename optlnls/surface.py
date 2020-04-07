@@ -114,16 +114,18 @@ def SRW_figure_error(file_name, unit_factor, angle_in, angle_out, orientation_x_
         return srwl_opt_setup_surf_height_2d(height2D, orientation_x_or_y, angle_in, angle_out)
     
     
-def analyze_height_error(filelist, unit_factor):
+def analyze_height_error(filelist, unit_factor, workingFolder=''):
     
     import os
     from optlnls.math import derivate, psd
     from optlnls.plot import set_ticks_size
     from scipy.optimize import curve_fit
     
-    #global filename, length_scan, mer_errors, sag_errors, new_mtx, frequencies, PSD, popt, x, y, idx 
     
     # === CREATES SUBFOLDERS === #
+    if(workingFolder != ''):
+        os.chdir(workingFolder)
+        
     if not (os.path.exists('2D')): os.mkdir('2D')
     if not (os.path.exists('meridional')): os.mkdir('meridional')
     if not (os.path.exists('sagittal')): os.mkdir('sagittal')
@@ -320,7 +322,7 @@ def linear_function(x, a, b):
     
     
 def gen_figure_error(L=400e-3, W=40e-3, stepL=1e-3, stepW=1e-3, 
-                     rmsL=1e-9, rmsW=1e-3, betaL=2.0, betaW=2.0, 
+                     rmsL=1e-9, rmsW=1e-9, betaL=2.0, betaW=2.0, 
                      typeL='h', typeW='h', seedL=8787, seedW=8454,
                      filename='', plot=False):
     
@@ -387,7 +389,7 @@ def gen_figure_error(L=400e-3, W=40e-3, stepL=1e-3, stepW=1e-3,
         
     
     
-gen_figure_error(plot=True, filename='outputs/test_he.dat')
+
     
     
     

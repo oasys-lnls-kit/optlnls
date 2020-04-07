@@ -85,6 +85,17 @@ def test_height_error_analysis():
     
     analyze_height_error(filelist, 1e-3)
     
+def test_figure_error_generation():
+    
+    from optlnls.surface import gen_figure_error, analyze_height_error
+    
+    gen_figure_error(plot=True, filename='outputs/test_he.dat')
+
+    filelist = []
+    filelist.append('test_he.dat')
+    
+    analyze_height_error(filelist, 1e-3, workingFolder='outputs')
+
 
 if __name__ == '__main__':
     
@@ -95,6 +106,7 @@ if __name__ == '__main__':
     # test_reflectivity_xrays()
     # test_srw_undulator_spectrum()
     # test_height_error_analysis()
+    # test_figure_error_generation()
 
 
 
