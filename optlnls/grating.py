@@ -56,3 +56,15 @@ def sx700_angles(energy, cff, line_density, normal_or_surface):
         return [alpha_f*r2d, beta_f*r2d, gamma_f*r2d]
     if normal_or_surface == 1:
         return [alpha_f_graz*r2d, beta_f_graz*r2d, gamma_f_graz*r2d]
+	
+	
+def sx700_distance_mirror_grating(gap=20e-3, gamma=80.0):
+	
+	return gap/np.abs(np.sin(np.pi-2*np.deg2rad(gamma))) 
+	
+	
+	
+	
+	
+	
+	
