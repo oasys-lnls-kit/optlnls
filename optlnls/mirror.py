@@ -313,8 +313,9 @@ def write_refl_files(wavelength, Rs, Rp, prefix):
     lists_Rs=[]
     lists_Rp=[]
     for i in range(len(wavelength)):
-        lists_Rs.append([wavelength[i], Rs[i]])
-        lists_Rp.append([wavelength[i], Rp[i]])
+        if(len(wavelength[i])>0):
+            lists_Rs.append([wavelength[i], Rs[i]])
+            lists_Rp.append([wavelength[i], Rp[i]])
 
     wavelength_Rs_avg, Rs_avg = common_region_average(lists_Rs)
     wavelength_Rp_avg, Rp_avg = common_region_average(lists_Rp)
@@ -329,8 +330,9 @@ def write_average_nk(wavelength, n, k, filename, step=0):
     lists_n=[]
     lists_k=[]
     for i in range(len(wavelength)):
-        lists_n.append([wavelength[i], n[i]])
-        lists_k.append([wavelength[i], k[i]])
+        if(len(wavelength[i])>0):
+            lists_n.append([wavelength[i], n[i]])
+            lists_k.append([wavelength[i], k[i]])
 
     wavelength_n_avg, n_avg = common_region_average(lists_n, step)
     wavelength_k_avg, k_avg = common_region_average(lists_k, step)
