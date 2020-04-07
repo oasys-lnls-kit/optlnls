@@ -319,12 +319,75 @@ def linear_function(x, a, b):
     return a*x + b
     
     
+def gen_figure_error(L=400e-3, W=40e-3, stepL=1e-3, stepW=1e-3, 
+                     rmsL=1e-9, rmsW=1e-3, betaL=2.0, betaW=2.0, 
+                     typeL='h', typeW='h', seedL=8787, seedW=8454,
+                     filename='', plot=False):
+    
+    from srxraylib.metrology import profiles_simulation
+    
+    # ==== Main Parameters ============================== #
+    
+    if(typeL == 'h'):
+        typeL = 0 # (0) Normalize by Height RMS, (1) Normalize by Slope RMS
+    elif(typeL == 's'):
+        typeL = 1
+
+    if(typeW == 'h'):
+        typeW = 0 # (0) Normalize by Height RMS, (1) Normalize by Slope RMS
+    elif(typeW == 's'):
+        typeW = 1
+        
+    if(seedL == 0):
+        fct = 1e4 if np.random.random() <= 0.5 else 1e3
+        seedL = int(np.random.random()*fct)
+
+    if(seedW == 0):
+        fct = 1e4 if np.random.random() <= 0.5 else 1e3
+        seedW = int(np.random.random()*fct)
+        
+    
+    # ==== Creates 2D matrix ============================ #
+    x, y, z  = profiles_simulation.simulate_profile_2D(combination='FF',
+                         mirror_length=L, step_l=stepL, random_seed_l=seedL, 
+                         error_type_l=typeL, rms_l=rmsL,
+                         power_law_exponent_beta_l=betaL,
+                         mirror_width=W, step_w=stepW, random_seed_w=seedW, 
+                         error_type_w=typeW, rms_w=rmsW,
+                         power_law_exponent_beta_w=betaW)
+    
+    # ==== Formats matrix to the required by function === #                      
+    mtx_fmt = np.zeros((len(x)+1, len(y)+1))
+    mtx_fmt[0, 1:] = y
+    mtx_fmt[1:, 0] = x
+    mtx_fmt[1:,1:] = np.transpose(z)
+    
+    print(filename)    
+    print('RMS = {0:.3f} nm'.format(np.std(z[:, 0]*1e9)))
+    print('PV = {0:.3f} nm\n'.format(np.max(z[:, 0]*1e9)-np.min(z[:, 0]*1e9)))
+    
+                         
+    # # ==== Writes files for shadow input ================ #                     
+    if(filename != ''):
+        write_shadow_height_error(mtx_fmt, filename, 1e3, ' ') # [mm]
+    
+    # # ==== Preview Plots ================================ #
+    if(plot):
+        
+        plt.figure(figsize=(6,1))
+        plt.pcolormesh(y, x, np.transpose(z))
+        plt.autoscale(enable=True, tight=True)
+        
+        plt.figure()
+        plt.plot(y, z[:, 0]*1e9)
+        plt.xlabel('L')
+        plt.ylabel('height error')
+        
+        plt.show()       
+        
     
     
-    
-    
-    
-    
+gen_figure_error(plot=True, filename='outputs/test_he.dat')
     
     
     
