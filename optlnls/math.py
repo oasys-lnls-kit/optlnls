@@ -9,6 +9,9 @@ Created on Sat Mar 21 11:47:24 2020
 import numpy as np
 from scipy.interpolate import interp1d
 
+def linear_function(x, a, b):
+    return a*x + b
+
 def gauss_function(x, a, x0, sigma):
     return a*np.exp(-(x-x0)**2/(2*sigma**2))
 

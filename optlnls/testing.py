@@ -78,12 +78,16 @@ def test_srw_undulator_spectrum():
 def test_height_error_analysis():
     
     from optlnls.surface import analyze_height_error
+    import glob
     
-    filelist = []
-    filelist.append('/media/sergio.lordano/DATA/Oasys/EMA/MagnetHutch/KP-16-0087-VFM_sp_mm.dat')
-    filelist.append('/media/sergio.lordano/DATA/Oasys/EMA/MagnetHutch/KP-16-0087-HFM_sp_mm.dat')
+    # filelist = []
+    # filelist.append('/media/sergio.lordano/DATA/Oasys/EMA/MagnetHutch/KP-16-0087-VFM_sp_mm.dat')
+    # filelist.append('/media/sergio.lordano/DATA/Oasys/EMA/MagnetHutch/KP-16-0087-HFM_sp_mm.dat')
+    # filelist.append('/media/sergio.lordano/DATA/optlnls/optlnls/outputs/test_1.dat')
     
-    analyze_height_error(filelist, 1e-3)
+    filelist = sorted(glob.glob('/media/sergio.lordano/DATA/optlnls/optlnls/outputs/*.dat'))
+    
+    analyze_height_error(filelist, 1e-3, workingFolder='outputs')
     
 def test_figure_error_generation():
     
@@ -96,6 +100,23 @@ def test_figure_error_generation():
     
     analyze_height_error(filelist, 1e-3, workingFolder='outputs')
 
+def test_figure_error_generation_multi():
+    
+    from optlnls.surface import gen_figure_error_multi
+    
+    list_height_rms = np.array([5, 10, 15, 20, 25, 30])*1.2e-9
+    list_slope_rms = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])*1e-6
+    
+    idx = 7
+    
+    gen_figure_error_multi(L=380e-3, W=30e-3, stepL=0.5e-3, stepW=1.0e-3, 
+                           betaW=2.0, rmsW=5e-9, typeW='h',
+                           list_height_rms=list_height_rms[:idx], 
+                           list_slope_rms=list_slope_rms[:idx], 
+                           seedL=1205, seedW=982, prefix='outputs/SAP_M1_f3', tolL=0.001)
+    
+    
+
 
 if __name__ == '__main__':
     
@@ -106,8 +127,8 @@ if __name__ == '__main__':
     # test_reflectivity_xrays()
     # test_srw_undulator_spectrum()
     # test_height_error_analysis()
-    # test_figure_error_generation()
-
+    test_figure_error_generation_multi()
+    # test_height_error_analysis()
 
 
 

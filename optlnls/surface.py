@@ -8,6 +8,8 @@ Created on Sat Mar 21 15:29:25 2020
 
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.interpolate import interp1d
+from scipy.optimize import minimize
 
 
 def crop_height_error_matrix(matrix, L, W, height_offset=False):
@@ -103,7 +105,7 @@ def SRW_figure_error(file_name, unit_factor, angle_in, angle_out, orientation_x_
     :W: total mirror width in which the matrix must be cropped
     """
     from srwlib import srwl_opt_setup_surf_height_2d
-    import numpy as np
+
     
     height2D = from_shadow_to_matrix(file_name, unit_factor)
     if(crop):
@@ -117,7 +119,7 @@ def SRW_figure_error(file_name, unit_factor, angle_in, angle_out, orientation_x_
 def analyze_height_error(filelist, unit_factor, workingFolder=''):
     
     import os
-    from optlnls.math import derivate, psd
+    from optlnls.math import derivate, psd, linear_function
     from optlnls.plot import set_ticks_size
     from scipy.optimize import curve_fit
     
@@ -134,6 +136,8 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
     
     
     for slopefile in filelist:
+        
+
         
         # *** Finds adequate dimensions and writes new Shadow input file *** #
         filename = slopefile.split('/')[-1]
@@ -286,8 +290,9 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
         plt.text(0.95,0.95, r'$y = \alpha\ + \beta*x$'+'\n'+r'$\alpha= $'+'{0:.3f}'.format(popt[1])+'\n'+r'$\beta= $'+'{0:.3f}'.format(popt[0]), verticalalignment="top", horizontalalignment="right", transform=plt.gca().transAxes)
         set_ticks_size(fsize)
         plt.savefig(os.path.join(os.getcwd(), 'PSD', filename.split('.')[0]+'_PSD.png'), dpi=200)
-            
-        plt.show()
+
+        plt.close('all')            
+        # plt.show()
 
 def calc_errors(axis, heights, coordinate_value=0):
     
@@ -317,14 +322,12 @@ def write_stats(filename, length_scan, mer_errors, sag_errors, new_mtx):
         stats.write('\n# *** Over all surface *** # \nPeak-to-Valley[nm]\tMinimum-Height[nm]\tMaximum-Height[nm]\n'+'{0:.3f}\t{1:.3f}\t{2:.3f}\n'.format(np.max(new_mtx[1:,1:]*1e9) - np.min(new_mtx[1:,1:]*1e9), np.min(new_mtx[1:,1:]*1e9), np.max(new_mtx[1:,1:]*1e9)))
     stats.close()
     
-def linear_function(x, a, b):
-    return a*x + b
     
     
 def gen_figure_error(L=400e-3, W=40e-3, stepL=1e-3, stepW=1e-3, 
                      rmsL=1e-9, rmsW=1e-9, betaL=2.0, betaW=2.0, 
                      typeL='h', typeW='h', seedL=8787, seedW=8454,
-                     filename='', plot=False):
+                     filename='', plot=False, print_out=False):
     
     from srxraylib.metrology import profiles_simulation
     
@@ -364,9 +367,10 @@ def gen_figure_error(L=400e-3, W=40e-3, stepL=1e-3, stepW=1e-3,
     mtx_fmt[1:, 0] = x
     mtx_fmt[1:,1:] = np.transpose(z)
     
-    print(filename)    
-    print('RMS = {0:.3f} nm'.format(np.std(z[:, 0]*1e9)))
-    print('PV = {0:.3f} nm\n'.format(np.max(z[:, 0]*1e9)-np.min(z[:, 0]*1e9)))
+    if(print_out):
+        print(filename)    
+        print('RMS = {0:.3f} nm'.format(np.std(z[:, 0]*1e9)))
+        print('PV = {0:.3f} nm\n'.format(np.max(z[:, 0]*1e9)-np.min(z[:, 0]*1e9)))
     
                          
     # # ==== Writes files for shadow input ================ #                     
@@ -385,13 +389,95 @@ def gen_figure_error(L=400e-3, W=40e-3, stepL=1e-3, stepW=1e-3,
         plt.xlabel('L')
         plt.ylabel('height error')
         
-        plt.show()       
+        plt.show()     
         
+    return mtx_fmt
+
+def minimize_slope_and_height(x, *args):
     
+    from optlnls.math import derivate
+    
+    betaL = x
+    
+    inputs = args[0]
+
+    mtx = gen_figure_error(L=inputs['L'], W=inputs['W'], 
+                           stepL=inputs['stepL'], stepW=inputs['stepW'], 
+                           rmsL=inputs['h_rms'], rmsW=inputs['rmsW'], 
+                           betaL=betaL, betaW=inputs['betaW'], 
+                           typeL='h', typeW=inputs['typeW'], 
+                           seedL=inputs['seedL'], seedW=inputs['seedW'])    
+  
+    l = mtx[0, 1:]
+    h_cut = mtx[1, 1:]
+    s_cut = derivate(l, h_cut)
+    s_rms = np.std(s_cut)
+    #print('evaluating... ', s_rms*1e9, inputs['s_rms']*1e9)
+    
+    return np.abs(s_rms - inputs['s_rms'])*1e9
+    
+    
+    
+        
+def gen_figure_error_multi(L=400e-3, W=40e-3, stepL=0.5e-3, stepW=0.5e-3, 
+                           betaW=2.0, rmsW=1e-9, typeW='h',
+                           list_height_rms=[1.0e-9], list_slope_rms=[1.0e-9], 
+                           seedL=8787, seedW=8454, prefix='test', tolL=0.1):
+    
+    inputs = {
+            "L":L,
+            "W":W,
+            "stepL":stepL,
+            "stepW":stepW,
+            "seedL":seedL,
+            "seedW":seedW,
+            "betaW":betaW,
+            "rmsW":rmsW,
+            "typeW":typeW            
+            }
+    
+    counter = 1
+    
+    for h_rms in list_height_rms:
+        for s_rms in list_slope_rms:
+            inputs["h_rms"] = h_rms
+            inputs['s_rms'] = s_rms
+            args = (inputs)
+            res = minimize(minimize_slope_and_height, x0=np.array([2.0]), args=args, 
+                           method='L-BFGS-B', bounds=[(0.05, 15.0)])
+            
+            print('Minimization succesful: ', res.success)
+            betaL = res.x
+            inputs["betaL"] = betaL
+            
+            gen_figure_error(L=L, W=W, stepL=stepL, stepW=stepW, 
+                             rmsL=h_rms, rmsW=rmsW, betaL=betaL, betaW=betaW, 
+                             typeL='h', typeW=typeW, seedL=seedL, seedW=seedW,
+                             filename=prefix+'_{0:d}.dat'.format(int(counter)))
+            
+            counter += 1          
+    
+
     
 
     
     
+def radius_difference(x, *args):
+    
+    # for LTP analysis
+    
+    # get x_ell and radius_ell from args
+    x_ell = args[0]
+    radius_ell = args[1]
+    R0 = args[2]
+    
+    radius_ell_interp = interp1d(x_ell, radius_ell)
+    
+    # manually chack if x is inside x_ell bounds
+    if((x <= x_ell.min()) or (x >= x_ell.max())):
+        return np.inf # return large value to fail minimization
+    else:
+        return radius_ell_interp(x) - R0
     
     
     
