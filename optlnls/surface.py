@@ -5,11 +5,12 @@ Created on Sat Mar 21 15:29:25 2020
 
 @author: sergio.lordano
 """
-
+import numpy
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.interpolate import interp1d
 from scipy.optimize import minimize
+from optlnls.math import derivate
 
 
 def crop_height_error_matrix(matrix, L, W, height_offset=False):
@@ -458,7 +459,157 @@ def gen_figure_error_multi(L=400e-3, W=40e-3, stepL=0.5e-3, stepW=0.5e-3,
             counter += 1          
     
 
+
+
+def func_ellipse_slopes(x, p, q, theta):
+    #
+    # returns y'(x), the slopes of an ellipse defined by p,q, and theta
+    #
+
+
+    a = (p + q) / 2
+    b = numpy.sqrt( p * q) * numpy.sin(theta)
+    c = numpy.sqrt(a*a - b*b)
+
+    epsilon = c / a
+
+    # (x0,y0) are the coordinates of the center of the mirror
+    # x0 = (p*p - q*q) / 4 / c
+    x0 = (p - q) / 2 / epsilon
+    y0 = -b * numpy.sqrt(1 - ((x0/a)**2))
+
+    # the versor normal to the surface at the mirror center is -grad(ellipse)
+    xnor = -2 * x0 / a**2
+    ynor = -2 * y0 / b**2
+    modnor = numpy.sqrt(xnor**2 + ynor**2)
+    xnor /= modnor
+    ynor /= modnor
+    # tangent  versor is perpendicular to normal versor
+    xtan =  ynor
+    ytan = -xnor
+
+
+    A = 1/b**2
+    B = 1/a**2
+    C = A
+
+    CCC = numpy.zeros(11)
+    #CCC[1] = A
+    CCC[2] = B*xtan**2 + C*ytan**2
+    CCC[3] = B*xnor**2 + C*ynor**2
+    #CCC[4] = .0
+    CCC[5] = 2*(B*xnor*xtan+C*ynor*ytan)
+    #CCC[6] = .0
+    #CCC[7] = .0
+    CCC[8] = .0
+    CCC[9] = 2*(B*x0*xnor+C*y0*ynor)
+    CCC[10]= .0
+
+    # ellipse implicit eq is c2 x^2 + c3 y^2 + c5 x y + c8 x + c9 y + c10 = 0
+    # AA y^2 + BB y + CC = 0
+    AA = CCC[3]
+    BB = CCC[5]*x + CCC[9]
+    CC = CCC[2]*x*x + CCC[8]*x + CCC[10]
+    DD = BB*BB-4*AA*CC
+    #yell = (-BB - numpy.sqrt(DD) )/(2*AA)
+    #yellp = numpy.gradient(yell,(x[1]-x[0]))
+
+    #calculate derivatives (primes P)
+    BBP = CCC[5]
+    CCP = 2*CCC[2]*x+CCC[8]
+    DDP = 2*BB*BBP -4*AA*CCP
+    ells = (-1/2/AA) * (BBP + DDP/2/numpy.sqrt(DD))
+
+    return ells
+
+
+def func_ellipse(x, p, q, theta):
+    #
+    # returns y(x), the heights of an ellipse defined by p,q, and theta
+    #
+
+    a = (p + q) / 2
+    b = numpy.sqrt( p * q) * numpy.sin(theta)
+    c = numpy.sqrt(a*a - b*b)
+
+    epsilon = c / a
+
+    # (x0,y0) are the coordinates of the center of the mirror
+    # x0 = (p*p - q*q) / 4 / c
+    x0 = (p - q) / 2 / epsilon
+    y0 = -b * numpy.sqrt(1 - ((x0/a)**2))
+
+    # print(">>>> func_ellipse: a=%f, b=%f, c=%f"%(a,b,c))
+    # print(">>>> func_ellipse: x0=%f, y0=%f"%(x0,y0))
+
+    # the versor normal to the surface at the mirror center is -grad(ellipse)
+    xnor = -2 * x0 / a**2
+    ynor = -2 * y0 / b**2
+    modnor = numpy.sqrt(xnor**2 + ynor**2)
+    xnor /= modnor
+    ynor /= modnor
+    # tangent  versor is perpendicular to normal versor
+    xtan =  ynor
+    ytan = -xnor
+
+
+    A = 1/b**2
+    B = 1/a**2
+    C = A
+
+    CCC = numpy.zeros(11)
+    #CCC[1] = A
+    CCC[2] = B*xtan**2 + C*ytan**2
+    CCC[3] = B*xnor**2 + C*ynor**2
+    #CCC[4] = .0
+    CCC[5] = 2*(B*xnor*xtan+C*ynor*ytan)
+    #CCC[6] = .0
+    #CCC[7] = .0
+    CCC[8] = .0
+    CCC[9] = 2*(B*x0*xnor+C*y0*ynor)
+    CCC[10]= .0
+
+    # ellipse implicit eq is c2 x^2 + c3 y^2 + c5 x y + c8 x + c9 y + c10 = 0
+    # AA y^2 + BB y + CC = 0
+    AA = CCC[3]
+    BB = CCC[5]*x + CCC[9]
+    CC = CCC[2]*x*x + CCC[8]*x + CCC[10]
+
+    #yell1 = (-BB + numpy.sqrt(BB*BB-4*AA*CC) )/(2*AA)
+    yell2 = (-BB - numpy.sqrt(BB*BB-4*AA*CC) )/(2*AA)
+
+    return yell2
     
+
+
+def calc_radius_of_curvature(x, y):
+    """
+
+    Parameters
+    ----------
+    x : TYPE
+        DESCRIPTION.
+    y : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    x2 : array_like
+        new coordinates x.
+    R : array_like
+        Radius of curvature in x2.
+
+    """
+
+    x1, d1y = derivate(x, y)
+    x2, d2y = derivate(x1, d1y)
+
+    d1y_interp = interp1d(x1, d1y)
+    d1y_i = d1y_interp(x2)
+
+    R = (1 + d1y_i ** 2) ** (3 / 2) / np.abs(d2y)
+
+    return x2, R
 
     
     
@@ -480,7 +631,7 @@ def radius_difference(x, *args):
         return radius_ell_interp(x) - R0
     
     
-    
+
     
     
     

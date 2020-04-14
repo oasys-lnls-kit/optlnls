@@ -53,12 +53,46 @@ def resample_distribution(array_x, array_y, oversampling=2, n_points=0):
     return x_int, y_int 
 
 
-def derivate(x, y):    
+def derivate(x, y, return_centered_values=True):
+    """
+
+    Parameters
+    ----------
+    x : array_like
+        array containing the coordinates.
+    y : array_like
+        array containing the values of the function to be derived.
+    return_centered_values : boolean (optional)
+        if True, will, calculate a new coordinate array with values from the
+        mean positios, otherwise will discard the last value.
+        The default is True.
+
+    Returns
+    -------
+    x_new : TYPE
+        DESCRIPTION.
+    dy_dx : TYPE
+        DESCRIPTION.
+
+    """
+    dy_dx = np.diff(y) / np.diff(x)
+    if return_centered_values:
+        x_new = np.array([(x[i] + x[i + 1]) / 2 for i in range(len(x) - 1)])
+    else:
+        x_new = x[:-1]
+
+    return x_new, dy_dx
+
+def derivate_keeping_size(x, y):  
+    """creates derivated array, but keeping same dimensions by copying last value"""
     diffy = [y[i+1]-y[i] for i in range(len(y)-1)]
     diffx = [x[i+1]-x[i] for i in range(len(x)-1)]
     der = [diffy[i]/diffx[i] for i in range(len(diffx))]
     der.append(der[-1])
     return np.array(der)
+
+
+
 
 def get_fwhm(x, y, oversampling=1, zero_padding=True, avg_correction=False, 
              inmost_outmost=0, threshold=0.5, npoints=5):
