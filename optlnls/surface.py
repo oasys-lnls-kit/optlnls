@@ -459,6 +459,8 @@ def gen_figure_error_multi(L=400e-3, W=40e-3, stepL=0.5e-3, stepW=0.5e-3,
             counter += 1          
     
 
+def spherical(x, R, x0, y0):
+    return -numpy.sqrt(R**2 - (x-x0)**2) + y0
 
 
 def func_ellipse_slopes(x, p, q, theta):
