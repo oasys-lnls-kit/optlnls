@@ -8,6 +8,7 @@ Created on Sat Mar 21 11:47:24 2020
 
 import numpy as np
 from scipy.interpolate import interp1d
+from matplotlib import pyplot as plt
 
 def linear_function(x, a, b):
     return a*x + b
@@ -351,6 +352,82 @@ def common_region_average(lines, force_step=0.0):
     return x_average, np.array(y_average)
 
 
+def zero_padding(mtx1, zero_pad_x=0, zero_pad_y=0, debug=False):
+    
+    if not(float(zero_pad_x).is_integer()):
+        zero_pad_x = int(np.ceil(zero_pad_x))
+        print("WARNING: zero_pad_x is not an integer and will be rounded to next integer")
+   
+    if not(float(zero_pad_y).is_integer()):
+        zero_pad_y = int(np.ceil(zero_pad_y))
+        print("WARNING: zero_pad_y is not an integer and will be rounded to next integer")
+   
+    
+    step_y = np.mean(np.diff(mtx1[1:,0]))
+    step_x = np.mean(np.diff(mtx1[0,1:]))
+    
+    range_y = mtx1[-1,0] - mtx1[1,0]
+    range_x = mtx1[0,-1] - mtx1[0,1]
+    
+    ny = len(mtx1[1:,0])
+    nx = len(mtx1[0,1:])
+    
+    if(debug):
+    
+        print('zero_pad_y, zero_pad_x')
+        print(zero_pad_y, zero_pad_x)
+        print('inital (step / range / npoints) y,x')
+        print(step_y, step_x)
+        print(range_y, range_x)
+        print(ny, nx)    
+        print('initial start values y,x')
+        print(mtx1[1,0], mtx1[0,1])
+        print('initial final values y,x')
+        print(mtx1[-1,0], mtx1[0,-1])
+
+    
+    mtx2_xStart = mtx1[0,1] - int(zero_pad_x * nx) * step_x
+    mtx2_xFin = mtx1[0,-1] + int(zero_pad_x * nx) * step_x
+    mtx2_x = np.arange(mtx2_xStart, mtx2_xFin + 0.5*step_x, step=step_x)
+    step_x_mtx2 = np.mean(np.diff(mtx2_x))
+    
+    mtx2_yStart = mtx1[1,0] - int(zero_pad_y * ny) * step_y
+    mtx2_yFin = mtx1[-1,0] + int(zero_pad_y * ny) * step_y
+    mtx2_y = np.arange(mtx2_yStart, mtx2_yFin + 0.5*step_y, step=step_y)
+    step_y_mtx2 = np.mean(np.diff(mtx2_y))
+
+    if(debug):
+        range_x_mtx2 = mtx2_xFin - mtx2_xStart
+        range_y_mtx2 = mtx2_yFin - mtx2_yStart
+
+        print('final (step / range / npoints) y,x')        
+        print(step_y_mtx2, step_x_mtx2)
+        print(range_y_mtx2, range_x_mtx2)
+        print(len(mtx2_y), len(mtx2_x))
+        print('final start values y,x')
+        print(mtx2_yStart, mtx2_xStart)
+        print('final final values y,x')
+        print(mtx2_yFin, mtx2_xFin)
+    
+    idx_xStart = np.abs(mtx1[0,1] - mtx2_x).argmin()
+    idx_xFin = np.abs(mtx1[0,-1] - mtx2_x).argmin()
+    idx_yStart = np.abs(mtx1[1,0] - mtx2_y).argmin()
+    idx_yFin = np.abs(mtx1[-1,0] - mtx2_y).argmin()
+    
+    mtx2 = np.zeros((int((2*zero_pad_y + 1) * ny + 1), int((2*zero_pad_x + 1) * nx + 1)))
+    mtx2[1:,0] = mtx2_y
+    mtx2[0,1:] = mtx2_x
+    mtx2[idx_yStart+1:idx_yFin+2, idx_xStart+1:idx_xFin+2] = mtx1[1:,1:]
+
+    if(debug):
+        
+        plt.figure()
+        plt.imshow(mtx1[1:,1:], extent=[mtx1[0,1], mtx1[0,-1], mtx1[1,0], mtx1[-1,0]])
+        
+        plt.figure()
+        plt.imshow(mtx2[1:,1:], extent=[mtx2[0,1], mtx2[0,-1], mtx2[1,0], mtx2[-1,0]])
+        
+    return mtx2
 
 
 

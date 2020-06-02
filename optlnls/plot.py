@@ -9,7 +9,7 @@ Created on Sat Mar 21 11:42:34 2020
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
-from optlnls.math import get_fwhm, calc_rms
+from optlnls.math import get_fwhm, calc_rms, zero_padding
 from optlnls.math import gauss_function, lorentz_function, lorentz_gauss_function
 from optlnls.fitting import fit_gauss, fit_lorentz, fit_lorentz_gauss
 
@@ -37,10 +37,11 @@ def beam_integral(mtx):
     return np.sum(mtx[1:,1:])*px*py
 
 def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, textA=0, textB=0, textC=0, textD=0, fitType=0, 
-                     overSampling=200.0, plot_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Z', units=2, plot_title='', 
+                     overSampling=200.0, fwhm_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Z', units=2, plot_title='', 
                      invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=0, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
-                     x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25):
+                     x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25,
+                     zero_pad_x=0, zero_pad_y=0):
     """
     
 
@@ -170,6 +171,9 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
     else:
         unitLabel = units # units is a string in this case
     
+    if(zero_pad_x != 0 or zero_pad_y != 0 ):
+        beam2D = zero_padding(beam2D, zero_pad_x, zero_pad_y)
+    
     # TRADE X and Y axes if needed
     if(invertXY):        
         z_axis = beam2D[0,1:]*unitFactor
@@ -272,7 +276,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
     z_cut_rms = calc_rms(z_axis, z_cut)
     x_cut_rms = calc_rms(x_axis, x_cut)
     
-    if(plot_zeroPadding != 0):
+    if(fwhm_zeroPadding == 0):
         z_cut_fwhm = get_fwhm(z_axis, z_cut, oversampling=overSampling, zero_padding=False, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext, npoints=1)
         x_cut_fwhm = get_fwhm(x_axis, x_cut, oversampling=overSampling, zero_padding=False, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext, npoints=1)
     else:
@@ -309,7 +313,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
             poptlg_x_cut, perrlg_x_cut = fit_lorentz_gauss(x_axis, x_cut, [x_mean, x_cut_max, x_cut_rms, x_cut_max, x_cut_rms], 10000)
             x_cut_fit = lorentz_gauss_function(x_axis, poptlg_x_cut[0], poptlg_x_cut[1], poptlg_x_cut[2], poptlg_x_cut[3], poptlg_x_cut[4])
       
-        if(plot_zeroPadding != 0):
+        if(fwhm_zeroPadding == 0):
             z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=False, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
             x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=False, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
         else:
