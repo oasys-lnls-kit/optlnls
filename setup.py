@@ -11,7 +11,7 @@ setuptools.setup(
     description="X-ray optics utilities",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/SergioLordano/optlnls",
+    url="https://github.com/oasys-lnls-kit/optlnls",
     packages=setuptools.find_packages(),
 	install_requires=[
     	'numpy>=1.18.0',
