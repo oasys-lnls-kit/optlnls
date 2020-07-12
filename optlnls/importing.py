@@ -127,7 +127,7 @@ def read_spectra_xyz(filename):
     return beam
 
 
-def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0):
+def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap_phase=0):
     """
     
 
@@ -161,6 +161,10 @@ def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0):
     
     int_mtx = np.array(arI)
     int_mtx = int_mtx.reshape((wfr.mesh.ny, wfr.mesh.nx))
+    
+    if(unwrap_phase):
+        int_mtx = np.unwrap(int_mtx, axis=0, discont=np.pi)
+        int_mtx = np.unwrap(int_mtx, axis=1, discont=np.pi)
     
     mtx = np.zeros((wfr.mesh.ny+1, wfr.mesh.nx+1), dtype=np.float)
     mtx[0,1:] = np.linspace(wfr.mesh.xStart, wfr.mesh.xFin, wfr.mesh.nx)*1e3
