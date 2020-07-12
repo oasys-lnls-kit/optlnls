@@ -41,7 +41,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
                      invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=0, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
                      x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25,
-                     zero_pad_x=0, zero_pad_y=0):
+                     zero_pad_x=0, zero_pad_y=0, export_slices=0):
     """
     
 
@@ -323,6 +323,10 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         z_cut_fit_rms = calc_rms(z_axis, z_cut_fit)
         x_cut_fit_rms = calc_rms(x_axis, x_cut_fit)
         
+    if(export_slices):
+        
+        np.savetxt(outfilename[:-4]+'_x.dat', np.array([x_axis, x_cut]).transpose())
+        np.savetxt(outfilename[:-4]+'_y.dat', np.array([z_axis, z_cut]).transpose())
 
     
     # =============== PLOT =============== #
