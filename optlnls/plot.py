@@ -325,8 +325,8 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         
     if(export_slices):
         
-        np.savetxt(outfilename[:-4]+'_x.dat', np.array([x_axis, x_cut]).transpose())
-        np.savetxt(outfilename[:-4]+'_y.dat', np.array([z_axis, z_cut]).transpose())
+        np.savetxt(outfilename[:-4]+'_x.dat', np.array([x_axis, x_cut * offsetFactorX]).transpose(), fmt='%.6e')
+        np.savetxt(outfilename[:-4]+'_y.dat', np.array([z_axis, z_cut * offsetFactorZ]).transpose(), fmt='%.6e')
 
     
     # =============== PLOT =============== #

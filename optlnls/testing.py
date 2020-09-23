@@ -116,6 +116,51 @@ def test_figure_error_generation_multi():
                            seedL=1205, seedW=982, prefix='outputs/SAP_M1_f3', tolL=0.001)
     
     
+def test_cedro_grating_alpha():
+    
+    from optlnls.constants import hc
+    from optlnls.grating import calc_constant_included_angle, calc_grating_beta    
+
+    
+    energy = np.linspace(2, 10, 101)
+    # energy = np.linspace(3, 10, 101)
+    wavelength = hc / energy
+
+    k0 = np.linspace(100, 1000, 51)
+    
+    wavelength_x, k0_y = np.meshgrid(wavelength, k0)
+    energy_x = np.array([energy for i in range(len(k0))])
+
+    alpha, beta = calc_constant_included_angle(wavelength_x, k0_y, 1, 90)
+    
+
+
+    fig, (ax1, ax2) = plt.subplots(figsize=(10,4), ncols=2, sharey=True)
+    fig.subplots_adjust(wspace=0.15)
+    xticks = np.arange(int(energy.min()), int(energy.max())+1)
+    
+    im1 = ax1.contourf(energy_x, k0_y, alpha, cmap='tab20', levels=20)
+    cb1 = fig.colorbar(im1, ax=ax1, label='alpha [degrees]')
+    ax1.set_ylabel('k0 [lines/mm]')
+    ax1.set_xlabel('energy [eV]')
+    ax1.grid()
+    ax1.set_xticks(xticks)
+    
+    im2 = ax2.contourf(energy_x, k0_y, beta, cmap='tab20', levels=20)
+    cb2 = fig.colorbar(im2, ax=ax2, label='beta [degrees]')
+    ax2.set_xlabel('energy [eV]')
+    ax2.grid()
+    ax2.set_xticks(xticks)
+    
+    # plt.colorbar()
+    
+    # plt.savefig('CED_angles.png', dpi=400)
+    
+    
+    plt.show()
+    
+    # print()
+    
 
 
 if __name__ == '__main__':
@@ -127,15 +172,57 @@ if __name__ == '__main__':
     # test_reflectivity_xrays()
     # test_srw_undulator_spectrum()
     # test_height_error_analysis()
-    test_figure_error_generation_multi()
+    # test_figure_error_generation_multi()
     # test_height_error_analysis()
+    # test_cedro_grating_alpha()
 
 
 
 
+    from optlnls.constants import hc
+    from optlnls.grating import calc_constant_included_angle, calc_grating_beta    
+
+    
+    energy = 6.0
+    # energy = np.linspace(3, 10, 101)
+    wavelength = hc / energy
+
+    k0 = 300
+    
+    alpha, beta = calc_constant_included_angle(wavelength, k0, 1, 90)
 
 
+    m = -1
+    energy = 6.0
+    wavelength = 1239.8419843320028*1e-9 / energy # meters
+    k0 = 300 # lines/mm
+    # alpha = 60
+    beta2 = calc_grating_beta(wavelength, alpha, k0, m)
+    
+    
+    
+    p = 4.0
+    q = 4.0
+    f = 1/(1/p+1/q)
 
+    cos_alpha = np.cos(alpha*np.pi/180)
+    cos_beta = np.cos(beta*np.pi/180)
+    
+    Rs = f * (cos_alpha + cos_beta) 
+    Rm = (cos_alpha + cos_beta) / (cos_alpha**2 / p + cos_beta**2 / q)    
+
+    # Rs_coddington = 2 * f * np.sin(alpha*np.pi/180)
+    # Rm_coddington = 2 * f / np.sin(alpha*np.pi/180)
+
+    print("alph = ", round(alpha, 7), ' deg')
+    print("beta = ", round(beta, 7), ' deg')
+    print("beta2 = ", round(beta2, 7), ' deg')
+    print("sagittal radius = ", round(Rs, 6), ' m')
+    print("meridional radius = ", round(Rm, 6), ' m')
+
+
+    print(alpha)
+    print(beta)
 
 
 
