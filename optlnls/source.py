@@ -6,9 +6,17 @@ Created on Sat Mar 21 15:26:15 2020
 @author: sergio.lordano
 """
 
+import numpy
 import numpy as np
 from matplotlib import pyplot as plt
 import scipy.special as spc
+
+from scipy.interpolate import interp1d
+from scipy.integrate import simps
+from scipy.special import kv
+from scipy.integrate import quad
+import scipy.constants as codata
+
 
 def get_k(Period, what_harmonic, Energy, k_ext):
     E = 3.0e9; e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
@@ -163,17 +171,199 @@ def AuxReadInMagFld3D(filePath, sCom):
     return SRWLMagFld3D(locArBx, locArBy, locArBz, xNp, yNp, zNp, xRange, yRange, zRange, 1)
 
 
+def BM_spectrum(E, I, B, ph_energy, hor_acc_mrad=1.0):
+    """
+    Calculates the emitted spectrum of a Bending Magnet (vertically integrated) whithin a horizontal acceptance\n
+    Units: [ph/s/0.1%bw]\n
+    :E: Storage Ring energy [GeV]
+    :I: Storage Ring current [A]
+    :B: Magnetic Field value [T]    
+    :ph_energy: Array of Photon Energies [eV]
+    :hor_acc_mrad: Horizontal acceptance [mrad]
+    """
+    
+    
+    
+    def bessel_f(y):
+        return kv(5.0/3.0, y)    
+        
+    e_c = 665*(E**2)*B # eV
+    y = ph_energy/e_c
+    int_K53 = numpy.zeros((len(y)))
+    for i in range(len(y)):
+        int_K53[i] = quad(lambda x: kv(5.0/3.0, x), y[i], numpy.inf)[0]
+    G1_y = y*int_K53
+    BM_Flux = (2.457*1e13)*E*I*G1_y*hor_acc_mrad
+    
+    return BM_Flux
 
 
+def Wiggler_spectrum(E, I, B, N_periods, ph_energy, hor_acc_mrad=1.0):
+        """
+        Calculates the emitted spectrum of a Wiggler (vertically integrated) whithin a horizontal acceptance\n
+        Units: [ph/s/0.1%bw]\n
+        :E: Storage Ring energy [GeV]
+        :I: Storage Ring current [A]
+        :B: Magnetic Field value [T]    
+        :N_periods: Number of Periods
+        :ph_energy: Array of Photon Energies [eV]
+        :hor_acc_mrad: Horizontal acceptance [mrad]
+        """
+        
+        def bessel_f(y):
+            return kv(5.0/3.0, y)    
+            
+        e_c = 665*(E**2)*B # eV
+        y = ph_energy/e_c
+        int_K53 = numpy.zeros((len(y)))
+        for i in range(len(y)):
+            int_K53[i] = quad(lambda x: kv(5.0/3.0, x), y[i], numpy.inf)[0]
+        G1_y = y*int_K53
+        W_Flux = (2.457*1e13)*E*I*G1_y*hor_acc_mrad*(2*N_periods)
+        
+        return W_Flux    
 
 
+def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3], e_beam_vert_div=0.0, plot=False):
+
+    """
+    Calculates the vertical angular flux probability density function (pdf) for \
+    a Bending Magnet or Wiggler and compares it to divergence limits to calculate \
+    the relative vertcal acceptance.\n
+    Return: Dictionary containing vertical angular distribution, fwhm and acceptance factor (energy-dependent)  \n
+    :E: Storage Ring energy [GeV]
+    :B: Magnetic Field value [T]    
+    :ph_energy: Photon Energy - single value or array - [eV]
+    :div_limits: Divergence limits array for which acceptance must be calculated [rad]
+    :e_beam_vert_div: electron beam vertical divergence sigma [rad]. Not taken into account if equal to None.
+    :plot: boolean: True or False if you want the distribution to be shown.
+    """
+    import numpy
+    from scipy.special import kv
+    from scipy.integrate import simps
+    
+    def gaussian_pdf(x, x0, sigma): # gaussian probability density function (PDF)
+        return (1/(numpy.sqrt(2*numpy.pi*sigma**2)))*numpy.exp(-(x-x0)**2/(2*sigma**2))
+    
+    def calc_vert_dist(e_relative):
+        G = (e_relative/2.0)*(gamma_psi**(1.5))    
+        K13_G = kv(1.0/3.0, G)
+        K23_G = kv(2.0/3.0, G)
+          
+        dN_dOmega  = (1.33e13)*(E**2)*I*(e_relative**2)*(gamma_psi**2)
+        dN_dOmega *= ( (K23_G**2) + (((gamma**2) * (psi**2))/(gamma_psi))*(K13_G**2) )   
+        
+        return dN_dOmega
+    
+    if(not(hasattr(ph_energy, "__len__"))): # for single energies
+        ph_energy = numpy.array([ph_energy])
+    
+    I = 0.1 # [A] -> result independent
+    gamma = E/0.51099890221e-03
+    e_c = 665*(E**2)*B # [eV]    
+    energy_relative = ph_energy/e_c
+    
+    # calculate graussian approximation to define psi mesh
+    int_K53 = quad(lambda x: kv(5.0/3.0, x), energy_relative[0], numpy.inf)[0]
+    K23 = kv(2.0/3.0, energy_relative[0]/2)
+    vert_angle_sigma = numpy.sqrt(2*numpy.pi/3)/(gamma*energy_relative[0])*int_K53/((K23)**2)
+    if(e_beam_vert_div > 0.0):
+        vert_angle_sigma = numpy.sqrt(vert_angle_sigma**2 + e_beam_vert_div**2) # calculates gaussian PDF of the e-beam vertical divergence
+    
+    psi = numpy.linspace(-vert_angle_sigma*2, vert_angle_sigma*2, 1000) # vertical angle array
+    gamma_psi = 1 + (gamma**2) * (psi**2) # factor dependent on gamma and psi
+    psi_minus = numpy.abs(psi - div_limits[0]).argmin() # first psi limit index
+    psi_plus = numpy.abs(psi - div_limits[1]).argmin() # second psi limit index
+    
+    vert_pdf = numpy.zeros((len(ph_energy), len(psi)))
+    vert_acceptance = numpy.zeros((len(ph_energy)))
+    lwhm = numpy.zeros((len(ph_energy)))
+    rwhm = numpy.zeros((len(ph_energy)))
+    fwhm = numpy.zeros((len(ph_energy)))
+    
+    if(e_beam_vert_div > 0.0):
+        e_beam_pdf = gaussian_pdf(psi, 0, e_beam_vert_div) # calculates gaussian PDF of the e-beam vertical divergence
+        
+    for i in range(len(ph_energy)):
+        vert_pdf[i] = calc_vert_dist(energy_relative[i]) 
+        vert_pdf[i] /= simps(y=vert_pdf[i], x=psi)
+        
+        if(e_beam_vert_div > 0.0): # convolves radiation and e-beam angular distributions
+            
+            conv_dist = numpy.convolve(vert_pdf[i], e_beam_pdf, mode='same')
+            conv_dist_norm = simps(y=conv_dist, x=psi)
+            conv_pdf = conv_dist / conv_dist_norm # convolved PDF
+            vert_pdf[i] = conv_pdf
+            
+        vert_acceptance[i] = simps(vert_pdf[i][psi_minus:psi_plus+1], x=psi[psi_minus:psi_plus+1])
+        # calculates FWHM 
+        peak = numpy.max(vert_pdf[i])
+        peak_idx = numpy.abs(vert_pdf[i]-peak).argmin()
+        lwhm[i] = psi[numpy.abs(vert_pdf[i][:peak_idx] - peak/2).argmin()]
+        rwhm[i] = psi[numpy.abs(vert_pdf[i][peak_idx:] - peak/2).argmin() + peak_idx]
+        fwhm[i] = rwhm[i] - lwhm[i]
+
+   
+    if(plot==True and len(vert_pdf)==1):
+        from matplotlib import pyplot as plt
+        plt.figure()
+        plt.plot(psi*1e3, vert_pdf[0], 'C0.-')
+        plt.ylabel('$Flux \ PDF$')
+        plt.xlabel('$\psi \ [mrad]$')
+        plt.ylim(0, numpy.max(vert_pdf)*1.1)
+        plt.fill_between(psi*1e3, vert_pdf[i], where=numpy.logical_and(psi>=psi[psi_minus], psi<=psi[psi_plus]))
+        plt.axvline(x=psi[psi_minus]*1e3)
+        plt.axvline(x=psi[psi_plus]*1e3)
+        plt.plot(lwhm*1e3, peak/2, 'C1+', markersize=12)
+        plt.plot(rwhm*1e3, peak/2, 'C1+', markersize=12)
+        plt.show()
+        
+    if(plot==True and len(vert_pdf)>1):
+        from matplotlib import pyplot as plt
+        plt.figure()
+        plt.imshow(vert_pdf.transpose(), extent=[ph_energy[0], ph_energy[-1], psi[0]*1e3, psi[-1]*1e3], aspect='auto')
+        plt.xlabel('$Energy \ [eV]$')
+        plt.ylabel('$\psi \ [mrad]$')
+        plt.plot(ph_energy, lwhm*1e3, '--', color='white', linewidth=1.0, alpha=0.4)
+        plt.plot(ph_energy, rwhm*1e3, '--', color='white', linewidth=1.0, alpha=0.4)
+        plt.axhline(y=div_limits[0]*1e3, color='gray', alpha=0.5)
+        plt.axhline(y=div_limits[1]*1e3, color='gray', alpha=0.5)
+        plt.minorticks_on()
+        plt.ylim([-vert_angle_sigma*1.75e3, vert_angle_sigma*1.75e3])
+        plt.show()
+
+    output = {"Psi": psi,
+              "PDF": vert_pdf,
+              "acceptance": vert_acceptance,
+              "lwhm": lwhm,
+              "rwhm": rwhm,
+              "fwhm": fwhm}
+
+    return output
 
 
+def undulator_B_to_K(B, period):
+    
+    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
+    return e * period * B / (2 * pi * m_e * c)
+
+def undulator_K_to_B(K, period):
+    
+    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
+    return (2 * pi * m_e * c * K) /  (e * period)    
+
+def undulator_K_to_E1(K, period, E_GeV):
+    
+    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
+    gamma = E_GeV*1e9*e/(m_e*c**2)
+    E1 = 2 * gamma**2 * (2*pi*h_cut) * c / ( period * (1 + K**2 / 2) )
+    
+    return E1
 
 
-
-
-
-
-
+if __name__ == '__main__':
+    
+    print(undulator_B_to_K(B=0.7, period=0.022))
+    print(undulator_K_to_B(K=1.438, period=0.022))
+    print(undulator_K_to_E1(K=1.438, period=0.022, E_GeV=3.0))
 
