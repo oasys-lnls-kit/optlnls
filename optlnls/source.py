@@ -360,6 +360,17 @@ def undulator_K_to_E1(K, period, E_GeV):
     
     return E1
 
+def undulator_B_to_E1(B, period, E_GeV):
+    
+    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
+    gamma = E_GeV*1e9*e/(m_e*c**2)
+    K = undulator_B_to_K(B, period)
+    E1 = 2 * gamma**2 * (2*pi*h_cut) * c / ( period * (1 + K**2 / 2) )
+    
+    return E1
+
+
+
 
 if __name__ == '__main__':
     
