@@ -344,12 +344,12 @@ def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3]
 
 def undulator_B_to_K(B, period):
     
-    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
+    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; 
     return e * period * B / (2 * pi * m_e * c)
 
 def undulator_K_to_B(K, period):
     
-    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
+    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; 
     return (2 * pi * m_e * c * K) /  (e * period)    
 
 def undulator_K_to_E1(K, period, E_GeV):
@@ -370,11 +370,42 @@ def undulator_B_to_E1(B, period, E_GeV):
     return E1
 
 
+def undulator_E_to_K(energy, harmonic, period, E_GeV):
+    
+    e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
+    gamma = E_GeV*1e9*e/(m_e*c**2)
+    try:
+        K = np.sqrt( (4 * harmonic * (2*pi*h_cut) * c * gamma**2 )/(period * energy) - 2 )
+        return K
+    except:
+        print("invalid combination of parameters!")
+        return 0
+    
+def undulator_E_to_phase(energy, harmonic, period, E_GeV, B_max, z0_mm=0):
+    
+    K = undulator_E_to_K(energy, harmonic, period, E_GeV)
+    B = undulator_K_to_B(K, period)
+    z = z0_mm + (period / np.pi) * np.arccos(B / B_max) * 1e3
+    
+    return z
+    
+
+def undulator_phase_to_B(phase, phase_offset, period, B_peak):
+       
+    B = B_peak * np.abs( np.cos(np.pi * (phase - phase_offset) / period) )
+    
+    return B
+
 
 
 if __name__ == '__main__':
     
-    print(undulator_B_to_K(B=0.7, period=0.022))
-    print(undulator_K_to_B(K=1.438, period=0.022))
-    print(undulator_K_to_E1(K=1.438, period=0.022, E_GeV=3.0))
+    print(undulator_E_to_phase(energy=14353, harmonic=5, period=0.022, E_GeV=2.955, B_max=0.7064, z0=-0.3165))
+    
+    # B = 0.71033
+    # print(undulator_B_to_E1(B=B, period=0.022, E_GeV=3.0))
+    
+    # print(undulator_B_to_K(B=B, period=0.022))
+    # print(undulator_K_to_B(K=1.438, period=0.022))
+    # print(undulator_K_to_E1(K=1.438, period=0.022, E_GeV=3.0))
 
