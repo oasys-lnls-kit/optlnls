@@ -37,7 +37,7 @@ def beam_integral(mtx):
     return np.sum(mtx[1:,1:])*px*py
 
 def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, textA=0, textB=0, textC=0, textD=0, fitType=0, 
-                     overSampling=200.0, fwhm_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Z', units=2, plot_title='', 
+                     overSampling=200.0, fwhm_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Z', zlabel='', units=2, plot_title='', 
                      invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=0, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
                      x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25,
@@ -415,11 +415,12 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         ax2D.set_ylabel(ylabel + ' [' + unitLabel + ']', fontsize=fontsize)
     
         if ((x_cut.min() >= 0) & (z_cut.min() >= 0)):
-            if(cut==0):
-                axX.set_ylabel('ph/s/0.1%/' + unitLabel, fontsize=fontsize)
-            else:
-                axX.set_ylabel('ph/s/0.1%/' + unitLabel + '$^2$', fontsize=fontsize)
+            if((cut == 0) & (zlabel == '')):
+                zlabel = 'ph/s/0.1%/' + unitLabel
+            elif((cut > 0) & (zlabel == '')):
+                zlabel = 'ph/s/0.1%/' + unitLabel + '$^2$'
         	
+            axX.set_ylabel(zlabel, fontsize=fontsize)
 
         ############## MAKE PLOTS
         
