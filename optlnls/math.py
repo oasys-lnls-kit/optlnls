@@ -22,6 +22,23 @@ def lorentz_function(x, a, x0, sigma):
 def lorentz_gauss_function(x, x0, a, sigma, b, gamma):
     return a*np.exp(-(x-x0)**2/(2*sigma**2)) + (b / (gamma * (1 + ((x - x0) / gamma )**2)))
 
+def error_function(x, a, x0, sigma, y0):
+    
+    gaussian = gauss_function(x, a, x0, sigma)
+    
+    sign = 1 if a > 0 else -1
+    
+    y = np.zeros((len(x)))
+    y[0] = y0
+    for i in range(int(len(x)-1)):
+        y[i+1] = y[i] + sign*np.abs(gaussian[i+1] + gaussian[i])/2
+
+    x_step = np.abs(x[1] - x[0])
+    y *= x_step
+    
+    return y
+
+
 def calc_rms(x, f_x):
     return np.sqrt(np.sum(f_x*np.square(x))/np.sum(f_x) - (np.sum(f_x*x)/np.sum(f_x))**2)
 
