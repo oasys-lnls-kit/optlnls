@@ -95,15 +95,19 @@ def delete_nem_file(nem_filename, reflec_path):
     except:
         print(".nem file not found: " + path)
     
-def run_reflec(reflec_path, cmd='wineconsole'):
+def run_reflec(reflec_path, cmd='wineconsole', wait_execution=0):
     bashCommand = cmd + ' ' + 'Reflec.exe' 
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, cwd=reflec_path)
     output, error = process.communicate()
+    if(wait_execution):
+        process.wait()
 
-def run_reflec_from_bat_file(reflec_path, bat_filename, cmd='wineconsole'):
+def run_reflec_from_bat_file(reflec_path, bat_filename, cmd='wineconsole', wait_execution=0):
     bashCommand = cmd + ' ' + bat_filename
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, cwd=reflec_path)
     output, error = process.communicate()
+    if(wait_execution):
+        process.wait()
 
 
 def test_reflec_from_python():
