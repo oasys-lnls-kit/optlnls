@@ -38,6 +38,31 @@ def error_function(x, a, x0, sigma, y0):
     
     return y
 
+def pseudo_voigt_asymmetric_normalized(x, x0, sigma, alpha, beta, m):
+    
+    ln2 = np.log(2)
+    pi = np.pi
+    x = x - x0
+    sigma_x = 2*sigma / (1 + np.exp(-alpha * (x - beta)))
+    term1  = (1-m) * np.sqrt( 4 * ln2 / (pi * sigma_x**2) )
+    term1 *= np.exp( -(4 * ln2 / sigma_x**2) * x**2 )
+    term2  = (m / (2 * pi)) * sigma_x / ( (sigma_x/2)**2 + 4*x**2 )
+    pseudov_asymmetric = term1 + term2
+    return pseudov_asymmetric
+
+
+def pseudo_voigt_asymmetric(x, x0, a, sigma, alpha, beta, m):
+    
+    ln2 = np.log(2)
+    pi = np.pi
+    x = x - x0
+    sigma_x = 2*sigma / (1 + np.exp(-alpha * (x - beta)))
+    term1  = (1-m) * np.sqrt( 4 * ln2 / (pi * sigma_x**2) )
+    term1 *= np.exp( -(4 * ln2 / sigma_x**2) * x**2 )
+    term2  = (m / (2 * pi)) * sigma_x / ( (sigma_x/2)**2 + 4*x**2 )
+    pseudov_asymmetric = term1 + term2
+    pseudov_asymmetric *= a / np.max(pseudov_asymmetric)
+    return pseudov_asymmetric
 
 def calc_rms(x, f_x):
     return np.sqrt(np.sum(f_x*np.square(x))/np.sum(f_x) - (np.sum(f_x*x)/np.sum(f_x))**2)
