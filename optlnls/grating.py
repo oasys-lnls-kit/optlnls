@@ -63,20 +63,26 @@ def sx700_distance_mirror_grating(gap=20e-3, gamma=80.0):
 	return gap/np.abs(np.sin(np.pi-2*np.deg2rad(gamma))) 
 	
 	
-def calc_grating_beta(wavelength, alpha, k0, m=-1):
-
-	return np.arcsin(wavelength*1e3 * m * k0 - np.sin(alpha*np.pi/180)) * 180 / np.pi
+def calc_grating_beta(wavelength=200e-9, alpha=83.7480078, k0=75, m=-1, energy=0):
+    
+    if energy != 0:
+        wavelength = 1.23984198433e-6/energy
+    
+    return np.arcsin(wavelength*1e3 * m * k0 - np.sin(alpha*np.pi/180)) * 180 / np.pi
 	
 	
-def calc_constant_included_angle(wavelength, k0, m, two_theta):
+def calc_constant_included_angle(wavelength=200e-9, k0=75, m=1, two_theta=162, energy=0):
     ### equation from x-ray data booklet
+    
+    if energy != 0:
+        wavelength = 1.23984198433e-6/energy
     
     beta = np.arcsin((m * k0 * wavelength*1e3)/(2 * np.cos(two_theta/2*np.pi/180)))*180/np.pi - two_theta/2
     alpha = two_theta + beta	
     return alpha, beta
     
 
-def optimize_TGM_radii(wavelength, k0, m, alpha, beta, p, q):
+def TGM_optimize_radii(alpha=83.7480078, beta=78.2519922, p=1.0016, q=1.41428):
     ### equations from Peatman's book
     
     f = 1/(1/p+1/q)
@@ -90,6 +96,32 @@ def optimize_TGM_radii(wavelength, k0, m, alpha, beta, p, q):
     return Rm, Rs
 
 
-
+def TGM_focal_position(R=7.977, r=0.18228, alpha=83.7480078, beta=78.2519922, p=1.0016):
+    
+    cos_alpha = np.cos(alpha*np.pi/180)
+    cos_beta = np.cos(beta*np.pi/180)
+    
+    # meridional focusing
+    qm = (p*R*cos_beta**2) / ( p * (cos_alpha+cos_beta) - R*cos_alpha**2 )
+        
+    # sagittal focusing
+    fs = r / (cos_alpha + cos_beta)
+    qs = 1 / (1/fs - 1/p)
+        
+    return qm, qs
 
 	
+
+if __name__ == '__main__':
+    
+    pass
+
+
+
+
+
+
+
+
+
+
