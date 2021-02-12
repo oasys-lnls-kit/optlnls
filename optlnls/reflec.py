@@ -122,7 +122,7 @@ def test_reflec_from_python():
                  "k0": 75,
                  "groove depth": 230,
                  "groove ratio": 0.55,
-                 "apex": 80,
+                 "apex": 90,
                  "order": 1,
                   
                  "2theta constant": 162.0,
@@ -132,9 +132,9 @@ def test_reflec_from_python():
                  "material": "Si",
                  "material density": 2.32,
                  "coating": "Pt",
-                 "coating density": 21.0,
-                 "coating thickness": 100.0,
-                 "roughness": 0.2,
+                 "coating density": 21.45*0.95,
+                 "coating thickness": 20.0,
+                 "roughness": 0.0,
                 }
     
     
@@ -166,7 +166,7 @@ def test_reflec_from_python():
     
     write_reflec_grating_input(input_filename=reflec_path + input_prefix+'.txt',
                                grating_dict=grating,
-                               energy_grid=[200, 2000, 250],
+                               energy_grid=[2, 15, 51],
                                polarization='s', fourier_coeff=15,
                                nem_filename=nem_filename)
     
@@ -202,7 +202,9 @@ def test_reflec_from_python():
 
 
 
-
+if(__name__ == '__main__'):
+    
+    test_reflec_from_python()
 
 
 

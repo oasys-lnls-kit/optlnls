@@ -77,7 +77,7 @@ def calc_constant_included_angle(wavelength=200e-9, k0=75, m=1, two_theta=162, e
     if energy != 0:
         wavelength = 1.23984198433e-6/energy
     
-    beta = np.arcsin((m * k0 * wavelength*1e3)/(2 * np.cos(two_theta/2*np.pi/180)))*180/np.pi - two_theta/2
+    beta = np.arcsin((m * k0 * wavelength*1e3)/(2 * np.cos((two_theta/2)*np.pi/180)))*180/np.pi - two_theta/2
     alpha = two_theta + beta	
     return alpha, beta
     

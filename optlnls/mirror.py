@@ -349,8 +349,26 @@ def write_average_nk(wavelength, n, k, filename, step=0):
                 f.write('{0:.8f},{1:.8f}\n'.format(wavelength_n_avg[i],k_avg[i]))
     
 	
+def um2eV(wl):
+    return 1.239842/wl
+        
+def eV2um(e):
+    return 1.239842/e	
 	
-	
-	
-	
+
+def test_cedro_refl():
+    
+    filelist = ['inputs/Si.nk']
+    
+    theta = 45  
+    
+    wavelength, n, k, Rs, Rp, Ru = optical_properties(filelist, theta)
+    
+    energy = []
+    for i in range(len(filelist)):
+        energy.append(um2eV(wavelength[i]))
+    
+    
+    array_to_save = np.array([energy[0], Ru[0], Rs[0], Rp[0]]).transpose()
+    np.savetxt('Si_refl_45deg_fresnel_eq.txt', array_to_save, fmt='%.6e', delimiter='\t')
 
