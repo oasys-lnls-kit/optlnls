@@ -112,6 +112,124 @@ def TGM_focal_position(R=7.977, r=0.18228, alpha=83.7480078, beta=78.2519922, p=
 
 	
 
+def calc_grating_angle_from_cff(energy, k0, cff, m):
+
+    wavelength = 1.23984198433*1e-6/energy # [m]
+        
+    
+    wavelength_mm = wavelength*1e3 # used in mm to match k0 dimension in lines/mm
+    m_shadow = -1*m # shadow uses negative value
+    
+    sin_alpha = (-m_shadow*k0*wavelength_mm/(cff**2 - 1)) + \
+                np.sqrt(1 + (m_shadow*m_shadow*cff*cff*k0*k0*wavelength_mm*wavelength_mm)/((cff**2 - 1)**2))
+    
+    alpha = np.arcsin(sin_alpha)
+    beta = -np.arcsin(sin_alpha - m_shadow*k0*wavelength_mm)
+    gamma = (alpha + beta)/2
+    
+    alpha_deg = alpha*180/np.pi
+    beta_deg = beta*180/np.pi
+    gamma_deg = gamma*180/np.pi
+    
+    return alpha_deg, beta_deg, gamma_deg
+    
+
+
+
+def calc_VLS_polynomial_srw(energy, k0, m, alpha, beta, r_a, r_b):
+
+    wavelength = 1.23984198433*1e-6/energy # [m]
+    wavelength_mm = wavelength*1e3 # used in mm to match k0 dimension in lines/mm
+    m_shadow = -1*m # shadow uses negative value    
+
+    cos_alpha = np.cos(alpha * np.pi / 180)
+    sin_alpha = np.sin(alpha * np.pi / 180)
+    cos_beta = np.cos(beta * np.pi / 180)
+    sin_beta = np.sin(beta * np.pi / 180)
+    
+    ### VLS
+    b2 = (((cos_alpha**2)/r_a) + ((cos_beta**2)/r_b))/(-2*m_shadow*k0*wavelength_mm)
+    b3 = ((sin_alpha*cos_alpha**2)/r_a**2 - \
+         (sin_beta*cos_beta**2)/r_b**2)/(-2*m_shadow*k0*wavelength_mm)
+    b4 = (((4*sin_alpha**2 - cos_alpha**2)*cos_alpha**2)/r_a**3 + \
+         ((4*sin_beta**2 - cos_beta**2)*cos_beta**2)/r_b**3)/(-8*m_shadow*k0*wavelength_mm)
+    
+    srw_coeff_0 = round(k0, 8)
+    srw_coeff_1 = round(-2*b2, 8)
+    srw_coeff_2 = round(3*b3, 8)
+    srw_coeff_3 = round(-4*b4, 8)
+    
+    return [srw_coeff_0, srw_coeff_1, srw_coeff_2, srw_coeff_3]
+        
+
+def calc_PGM_distances(r_a, fixed_height, gamma):
+
+    d_source_to_plane_mirror = r_a - (fixed_height/np.abs(np.tan(np.pi-2*gamma)))
+    d_mirror_to_grating = fixed_height/np.abs(np.sin(np.pi-2*gamma))
+    
+    return [d_source_to_plane_mirror, d_mirror_to_grating]
+
+def calc_VLS_polynomial_shadow(energy, k0, m, alpha, beta, r_a, r_b):
+
+    wavelength = 1.23984198433*1e-6/energy # [m]
+    wavelength_mm = wavelength*1e3 # used in mm to match k0 dimension in lines/mm
+    m_shadow = -1*m # shadow uses negative value    
+
+    cos_alpha = np.cos(alpha * np.pi / 180)
+    sin_alpha = np.sin(alpha * np.pi / 180)
+    cos_beta = np.cos(beta * np.pi / 180)
+    sin_beta = np.sin(beta * np.pi / 180)
+    
+    ### VLS
+    b2 = (((cos_alpha**2)/r_a) + ((cos_beta**2)/r_b)) / (-2*m_shadow*k0*wavelength_mm)
+    
+    b3 = ((sin_alpha*cos_alpha**2)/r_a**2 - \
+         (sin_beta*cos_beta**2)/r_b**2)/(-2*m_shadow*k0*wavelength_mm)
+        
+    b4 = (((4*sin_alpha**2 - cos_alpha**2)*cos_alpha**2)/r_a**3 + \
+         ((4*sin_beta**2 - cos_beta**2)*cos_beta**2)/r_b**3)/(-8*m_shadow*k0*wavelength_mm)
+    
+    shadow_coeff_0 = round(k0, 8)
+    shadow_coeff_1 = round(-2*k0*b2, 8)
+    shadow_coeff_2 = round(3*k0*b3, 8)
+    shadow_coeff_3 = round(-4*k0*b4, 8)
+
+    return [shadow_coeff_0, shadow_coeff_1, shadow_coeff_2, shadow_coeff_3]
+
+
+def test_vls_sape():
+
+
+    energy_reference = 10.0 # eV
+    wavelength = 1.23984198433*1e-6/energy_reference # [m]
+    k0 = 180.0 # lines/mm
+    cff = 3.0
+    m = -1 # diffraction order
+    
+    alpha_deg, beta_deg, gamma_deg = calc_grating_angle_from_cff(energy=energy_reference, k0=k0, cff=cff, m=m)
+    
+    alpha_deg = round(alpha_deg, 8)
+    beta_deg = round(beta_deg, 8)
+    gamma_deg = round(gamma_deg, 8)
+    
+   
+    r_a = -6000.0 # mm
+    r_b = 6000.0 # mm
+        
+    poly = calc_VLS_polynomial_shadow(energy=energy_reference, k0=k0, m=m, alpha=alpha_deg, beta=-beta_deg, r_a=r_a, r_b=r_b)
+    # print(poly)
+    
+    if(1):
+
+    	print('shadow c0 =', poly[0])
+    	print('shadow c1 =', poly[1])
+    	print('shadow c2 =', poly[2])
+    	print('shadow c3 =', poly[3])
+    
+    
+
+
+
 if __name__ == '__main__':
     
     pass
