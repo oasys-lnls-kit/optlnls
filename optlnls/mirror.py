@@ -348,12 +348,39 @@ def write_average_nk(wavelength, n, k, filename, step=0):
             for i in range(len(wavelength_n_avg)):
                 f.write('{0:.8f},{1:.8f}\n'.format(wavelength_n_avg[i],k_avg[i]))
     
+    
+def calc_reflectivity_fresnel(energy, theta, input_file='Si.nk', unpolarized=0):
+    
+    wavelength, n, k, Rs, Rp, Ru = optical_properties([input_file], theta)
+    
+    Rs_interp = interp1d(wavelength[0], Rs[0], kind='linear')
+    Rp_interp = interp1d(wavelength[0], Rp[0], kind='linear')
+    
+    if(isinstance(energy, (int, float))):
+        
+        refl = np.array([Rs_interp(eV2um(energy)), Rp_interp(eV2um(energy))])
+        
+    else:
+        ne = len(energy)
+    
+        refl = np.zeros((2, ne))
+        
+        for i in range(ne):
+            wl = eV2um(energy[i])
+            refl[:,i] = [Rs_interp(wl), Rp_interp(wl)]
+        
+    if(unpolarized):
+        return np.average(refl, axis=0)
+    
+    else:
+        return refl
+    
 	
 def um2eV(wl):
-    return 1.239842/wl
+    return 1.23984198433/wl
         
 def eV2um(e):
-    return 1.239842/e	
+    return 1.23984198433/e	
 	
 
 def test_cedro_refl():

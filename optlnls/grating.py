@@ -125,7 +125,7 @@ def calc_grating_angle_from_cff(energy, k0, cff, m):
     
     alpha = np.arcsin(sin_alpha)
     beta = -np.arcsin(sin_alpha - m_shadow*k0*wavelength_mm)
-    gamma = (alpha + beta)/2
+    gamma = (alpha - beta)/2
     
     alpha_deg = alpha*180/np.pi
     beta_deg = beta*180/np.pi
@@ -221,10 +221,14 @@ def test_vls_sape():
     
     if(1):
 
-    	print('shadow c0 =', poly[0])
-    	print('shadow c1 =', poly[1])
-    	print('shadow c2 =', poly[2])
-    	print('shadow c3 =', poly[3])
+        print('alpha =', alpha_deg)        
+        print('beta =', beta_deg)
+        print('gamma =', gamma_deg)
+        
+        print('shadow c0 =', poly[0])
+        print('shadow c1 =', poly[1])
+        print('shadow c2 =', poly[2])
+        print('shadow c3 =', poly[3])
     
     
 
@@ -233,6 +237,7 @@ def test_vls_sape():
 if __name__ == '__main__':
     
     pass
+    test_vls_sape()
 
 
 
