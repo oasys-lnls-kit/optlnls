@@ -135,6 +135,34 @@ def derivate_keeping_size(x, y):
     return np.array(der)
 
 
+def Rx_matrix(theta):
+    rx = np.array([[1.0,           0.0,            0.0],
+                   [0.0, np.cos(theta), -np.sin(theta)],
+                   [0.0, np.sin(theta),  np.cos(theta)]])
+    return rx
+
+def Ry_matrix(theta):
+    ry = np.array([[np.cos(theta), 0.0, -np.sin(theta)],
+                   [          0.0, 1.0,            0.0],
+                   [np.sin(theta), 0.0,  np.cos(theta)]])
+    return ry
+
+def Rz_matrix(theta):
+    rz = np.array([[ np.cos(theta), np.sin(theta), 0.0],
+                   [-np.sin(theta), np.cos(theta), 0.0],
+                   [           0.0,           0.0, 1.0]])
+    return rz
+
+
+def reflection(ki, n):
+    k0 = ki - 2 * np.dot(ki, n) * n
+    return k0
+
+
+def angle_between(a, b):
+    return np.arccos( np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)) )
+
+
 def bin_matrix(matrix, binning_y, binning_x):
 
     yn, xn = matrix.shape
