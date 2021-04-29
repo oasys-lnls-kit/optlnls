@@ -551,7 +551,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
                 11 : [text11, 'C1'],
                 12 : [text12, 'C1'],
                 13 : [text13, 'black'],
-            }.get(x, ['', ''])       
+            }.get(x, ['', 'k'])       
         
         [text_box1, color1] = text(textA)
         [text_box2, color2] = text(textB)
