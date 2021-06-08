@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from optlnls.math import get_fwhm, calc_rms, zero_padding
-from optlnls.math import gauss_function, lorentz_function, lorentz_gauss_function
+from optlnls.fitting import gauss_function, lorentz_function, lorentz_gauss_function
 from optlnls.fitting import fit_gauss, fit_lorentz, fit_lorentz_gauss
 
 
