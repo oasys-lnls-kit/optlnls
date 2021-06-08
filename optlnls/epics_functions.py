@@ -159,7 +159,7 @@ def adjust_exposure_time(image_pv, exp_time_pv, saturation=256,
         print('   no need to optimize exposure time')
         return exp_time
 
-
+## OK
 def find_harmonics_given_energy(energy_points, min_energy=1.870, max_energy=3.600, 
                                 print_points=0, initial_harmonic=3, only_max_harmonic=0):
 

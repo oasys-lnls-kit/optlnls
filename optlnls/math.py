@@ -135,6 +135,15 @@ def derivate_keeping_size(x, y):
     return np.array(der)
 
 
+def poly_any_degree(x, coefficients):
+       
+    y = 0
+    for i in range(len(coefficients)):
+        y += coefficients[i] * x**i
+    return y
+
+
+
 def Rx_matrix(theta):
     rx = np.array([[1.0,           0.0,            0.0],
                    [0.0, np.cos(theta), -np.sin(theta)],
@@ -161,6 +170,10 @@ def reflection(ki, n):
 
 def angle_between(a, b):
     return np.arccos( np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)) )
+
+
+
+
 
 
 def bin_matrix(matrix, binning_y, binning_x):
