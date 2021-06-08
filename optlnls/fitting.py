@@ -62,10 +62,10 @@ def fit_lorentz_gauss(x, y, p0, maxfev=20000):
     return popt, perr
 
 
-def fit_pseudo_voigt_asymmetric(x, y, p0=[0]*6, autoguess=1, maxfev=20000, plot=0):
+def fit_pseudo_voigt_asymmetric(x, y, p0=[0]*6, autoguess=1, maxfev=20000, plot=0, window_length=11, poly_order=5):
     
     if(autoguess):
-        y_savgol = savgol_filter(y, 51, 5)
+        y_savgol = savgol_filter(y, window_length, poly_order)
         fwhm = get_fwhm(x, y, oversampling=200)[0]
         mean = np.average(x, weights=y)
         peak = np.max(y_savgol)        

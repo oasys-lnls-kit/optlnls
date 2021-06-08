@@ -203,6 +203,18 @@ def bin_matrix(matrix, binning_y, binning_x):
      
         return matrix_binned
 
+def crop_matrix(matrix, new_idx_y, new_idx_x, plot_matrix=0):
+    
+        matrix_cropped = matrix[int(new_idx_y[0]) : int(new_idx_y[1]),
+                                int(new_idx_x[0]) : int(new_idx_x[1])]   
+
+        if(plot_matrix):
+            fig, ax = plt.subplots(ncols=2)
+            ax[0].imshow(np.log10(matrix), origin='lower')
+            ax[1].imshow(np.log10(matrix_cropped), origin='lower')
+            plt.show()
+
+        return matrix_cropped
 
 
 def get_fwhm(x, y, oversampling=1, zero_padding=True, avg_correction=False, 
