@@ -9,8 +9,112 @@ Created on Thu Dec  3 15:29:36 2020
 import numpy as np
 from matplotlib import pyplot as plt
 import epics
+import h5py
 import time
-from optlnls.math import bin_matrix
+from optlnls.math import poly_any_degree
+from optlnls.image import bin_matrix
+from scipy.ndimage import rotate
+
+
+
+            
+def put_DCM(value, pv_DCM, pv_DCM_move, sleep_time=1.0):
+    
+    epics.caput(pv_DCM, value, wait=True) 
+
+    if(sleep_time > 0 ): time.sleep(1.0)
+    epics.caput(pv_DCM_move, 0, wait=True)
+    if(sleep_time > 0 ): time.sleep(1.0)
+    epics.caput(pv_DCM_move, 1, wait=True)
+    if(sleep_time > 0 ): time.sleep(1.0)
+    epics.caput(pv_DCM_move, 0, wait=True)    
+
+def put_undulator(value, pv_und, pv_und_start, sleep_time=0.5):
+    
+    epics.caput(pv_und, value)
+    if(sleep_time > 0 ): time.sleep(0.5)
+    epics.caput(pv_und_start, 3)
+
+
+
+def move_DCM(pv_to_move='MNC:A:DCM01:GonRxR', pv_RBV='MNC:A:DCM01:GonRxEnergy_RBV', pv_value=6.0, pv_delta=0.5e-3):
+    """
+    pv_to_move (type=str): name of the pv to be actuated (setpoint)
+    pv_RBV (type=str): name of the read-back-value pv that will be compared to the setpoint to check movement
+    pv_value (type=float): desired setpoint of the pv *pv_to_move* (e.g keV for energy)
+    pv_delta (type=float): interval to compare setpoint to read-back-value and define if movement is finished (e.g keV for energy)
+    """
+    
+    pv_trajMove = 'MNC:A:DCM01:TrajMove'
+
+    # put value to PV and operate trajMove
+    put_DCM(pv_value, pv_to_move, pv_trajMove)
+
+    print('Moving DCM...')
+    t0 = time.time()
+    moving = 1
+    while moving:
+        time.sleep(0.2)
+        DCM_diff = np.abs(epics.caget(pv_RBV) - pv_value)
+        moving = DCM_diff >= pv_delta
+
+        # in case DCM does not move, try again in 10 seconds
+        if(time.time() - t0 > 10):
+            put_DCM(pv_value, pv_to_move, pv_trajMove)
+            t0 = time.time()
+
+    print('finished moving!')
+
+    return 1
+
+    
+def move_UND_and_DCM_at_MNC(energy_value, harmonic):
+    
+    #pv_und_phase_read = 'SI-09SA:ID-APU22:Phase-Mon'
+    pv_und_phase_write = 'SI-09SA:ID-APU22:Phase-SP'
+    pv_und_phase_moving = 'SI-09SA:ID-APU22:Moving-Mon'
+    pv_und_phase_start = 'SI-09SA:ID-APU22:DevCtrl-Cmd'
+
+    pv_DCM_energy_read = 'MNC:A:DCM01:GonRxEnergy_RBV'
+    pv_DCM_energy_write = 'MNC:A:DCM01:GonRxR'
+    pv_DCM_trajMove = 'MNC:A:DCM01:TrajMove'
+
+    phase = get_phase_from_energy(energy_value, harmonic, verbose=0)
+    
+    DCM_value = energy_value
+    UND_value = phase
+
+
+    if((DCM_value >= 5.5) & (DCM_value <= 25.0)):
+
+        put_DCM(DCM_value, pv_DCM_energy_write, pv_DCM_trajMove)
+
+        put_undulator(UND_value, pv_und_phase_write, pv_und_phase_start)
+
+        print('Moving DCM (Energy)...')
+
+        delta_DCM = 0.5e-3
+
+        t0 = time.time()
+        moving = 1
+        while moving:
+            time.sleep(0.1)
+            DCM_diff = np.abs(epics.caget(pv_DCM_energy_read) - DCM_value)
+            DCM_moving = DCM_diff >= delta_DCM
+            UND_moving = epics.caget(pv_und_phase_moving)
+            moving = UND_moving or DCM_moving
+
+            if(time.time() - t0 > 10):
+                put_DCM(DCM_value, pv_DCM_energy_write, pv_DCM_trajMove)
+                t0 = time.time()
+
+        print('finished moving!')
+        return 1
+
+    else:
+        print('NOT MOVING! COMMANDED DCM ENERGY IS OUT OF LIMITS!')
+        return 0
+
 
 def put_foil_into_beam(foil_pv, foil_pv_in, sleep_time):
     
@@ -35,23 +139,6 @@ def put_foil_out_of_beam(foil_pv, foil_pv_out, sleep_time):
             epics.caput(foil_pv, 0)
             if(sleep_time > 0 ): time.sleep(1)
             epics.caput(foil_pv, 1)
-            
-def put_DCM(value, pv_DCM, pv_DCM_move, sleep_time=1.0):
-    
-    epics.caput(pv_DCM, value, wait=True) 
-
-    if(sleep_time > 0 ): time.sleep(1.0)
-    epics.caput(pv_DCM_move, 0, wait=True)
-    if(sleep_time > 0 ): time.sleep(1.0)
-    epics.caput(pv_DCM_move, 1, wait=True)
-    if(sleep_time > 0 ): time.sleep(1.0)
-    epics.caput(pv_DCM_move, 0, wait=True)    
-
-def put_undulator(value, pv_und, pv_und_start, sleep_time=0.5):
-    
-    epics.caput(pv_und, value)
-    if(sleep_time > 0 ): time.sleep(0.5)
-    epics.caput(pv_und_start, 3)
 
 def get_current_value():
     
@@ -159,6 +246,87 @@ def adjust_exposure_time(image_pv, exp_time_pv, saturation=256,
         print('   no need to optimize exposure time')
         return exp_time
 
+
+def get_beam_position_arinax(px2um=0.31, pv='MNC:B:BZOOM:image1:ArrayData', plot=0):
+    
+    #px2um0 = 1.86 # micron/px zoom 1
+    px2um0 = 0.31 # micron/px # zoom 5
+    #px2um0 = 0.233 # micron/px # zoom 6
+    theta = 45 # rotation angle
+    shape = [1024, 1280, 3] # shape from detector
+    RGB_channel = 1 # choose RGM channel
+    background_value = 11 # points below this will be set to zero
+    
+    
+    cmap = 'viridis' 
+    origin = 'lower' 
+    # origin = 'upper'
+
+    # read PV from epics
+    pv = epics.PV(pv)
+    # data = np.array(pv.get(),np.int8)
+    data = np.array(pv.get())
+    #print('max count = ', np.max(data))
+    max_count = np.max(data)
+    # calculate pixel size for rotated image
+    px2um = px2um0 # * np.cos(theta * np.pi / 180)
+
+
+    # reshape array to 3-matrix (RGB)
+    data2 = data.reshape(shape[0], shape[1], shape[2])
+
+    # choose RGB channel and get x,y arrays in microns
+    img = data2[:,:,RGB_channel]
+
+    # remove background
+    img[img <= background_value] = 0 
+    
+#     img = median_filter(img, 3)
+#     img = gaussian_filter(img, 2)
+    
+    # rotate image
+    img_rot = rotate(img, theta, cval = 0)
+
+    shape_rot = img_rot.shape
+    x = np.linspace(1, shape_rot[1], shape_rot[1]) * px2um 
+    y = np.linspace(1, shape_rot[0], shape_rot[0]) * px2um
+
+    # calculate mean values to bring beam to (0,0)
+    Ix = np.sum(img_rot, axis=0)
+    Iy = np.sum(img_rot, axis=1)
+    x_mean = round(np.average(x, weights=Ix), 1)
+    y_mean = round(np.average(y, weights=Iy), 1)
+
+    if(plot):
+    
+        plt.figure(figsize=(12,8))
+        plt.imshow(img_rot, origin=origin, cmap=cmap,
+                  extent=[x[0], x[-1], y[0], y[-1]])
+        plt.hlines(y=y_mean, xmin=x[0], xmax=x[-1], linestyle='--', color='w', alpha=0.3)
+        plt.vlines(x=x_mean, ymin=y[0], ymax=y[-1], linestyle='--', color='w', alpha=0.3)
+        plt.minorticks_on()
+        plt.tick_params(which='both', axis='both', right=True, top=True)
+        plt.xlabel('X [$\mu$m]')
+        plt.ylabel('Y [$\mu$m]')
+    
+    return x_mean, y_mean, max_count
+
+def get_average_position(n=5, sleep_time=0.3, px2um=0.31, pv='MNC:B:BZOOM:image1:ArrayData', plot=0):
+    
+    data = np.zeros((n,3))
+    
+    for i in range(n):
+        
+        x, y, counts = get_beam_position_arinax(px2um, pv, plot)
+        data[i] = [x, y, counts]
+        time.sleep(sleep_time)
+        
+    data_averaged = np.average(data, axis=0)
+    data_rms = np.std(data, axis=0)
+    
+    return data_averaged, data_rms
+    
+
 ## OK
 def find_harmonics_given_energy(energy_points, min_energy=1.870, max_energy=3.600, 
                                 print_points=0, initial_harmonic=3, only_max_harmonic=0):
@@ -205,45 +373,7 @@ def find_harmonics_given_energy(energy_points, min_energy=1.870, max_energy=3.60
             
     return scan_points
 
-def bin_matrix(matrix, binning_y, binning_x):
 
-    yn, xn = matrix.shape
-
-    if ((xn % binning_x != 0) or (yn % binning_y != 0)):
-        print('array of shape ({0} x {1}) cannot be binned by factor ({2},{3})'.format(yn, xn, binning_y, binning_x))
-        return matrix
-    
-    else:
-        #print('binning matrix of shape({0},{1}) by factors ({2},{3})'.format(yn, xn, binning_y, binning_x))
-        xn = int(xn / binning_x)
-        yn = int(yn / binning_y)
-            
-        matrix_binned = np.zeros((yn,xn), dtype=float)
-        
-        count_y = 0
-        for iy in range(yn):
-    
-            count_x = 0
-            for ix in range(xn):
-                
-                matrix_binned[iy,ix] = np.sum(matrix[count_y:count_y+binning_y,
-                                                     count_x:count_x+binning_x])
-    
-                count_x += binning_x
-            count_y += binning_y
-            
-        matrix_binned /= binning_x*binning_y
-      
-        if(0):
-            fig, ax = plt.subplots(figsize=(12,4), ncols=2)
-            im0 = ax[0].imshow(matrix, origin='lower')
-            im1 = ax[1].imshow(matrix_binned, origin='lower')
-            fig.colorbar(im0, ax=ax[0])
-            fig.colorbar(im1, ax=ax[1])
-        
-            plt.show()
-     
-        return matrix_binned
 
 def acquire_image(image_pv, shape=(1024,1280), binning=(1,1), plot_image=0):
 
@@ -264,58 +394,21 @@ def acquire_image(image_pv, shape=(1024,1280), binning=(1,1), plot_image=0):
     return img
 
 
-def get_centroid(img, x=0, y=0):
-    
-    shape = img.shape
-    
-    if(x==0):
-        x = np.arange(0, shape[1])
-    if(y==0):
-        y = np.arange(0, shape[0])
-    
-    Ix = np.sum(img, axis=0)
-    Iy = np.sum(img, axis=1)
 
-    x_mean = 0
-    y_mean = 0
-
-    if(np.sum(Ix) != 0):
-        x_mean = x[np.argmax(Ix)]
-
-    if(np.sum(Iy) != 0):
-        y_mean = y[np.argmax(Iy)]  
-        
-    return (y_mean, x_mean)
-
-def get_vertical_cut(img, x=0, nx=1, binning=(1,1), plot_cut=0):
     
-    if(binning != (1,1)):
-        img = bin_matrix(img, binning[0], binning[1])
+def get_manaca_poly_coefficients():
     
-    if(nx == 1):
-        xmin=int(x)
-
-    elif(nx > 1):
-        xmin=int(x - nx/2)
-
-    xmax=int(xmin + nx)
-        
-    cut = np.sum(img[:, xmin:xmax], axis=1)/nx
+    poly_coeffs = np.array([1.87693588e+00,  
+                            1.16168505e-02,  
+                            5.63397037e-03,  
+                            9.07383600e-03,
+                           -2.91843183e-03,  
+                            5.54229460e-04, 
+                           -5.71610126e-05,  
+                            2.97752026e-06, 
+                           -6.69368265e-08])
     
-    if(plot_cut):
-        plt.figure()
-        plt.plot(cut)
-        plt.show()
-    
-    return cut
-    
-    
-def poly_any_degree(x, coefficients):
-       
-    y = 0
-    for i in range(len(coefficients)):
-        y += coefficients[i] * x**i
-    return y
+    return poly_coeffs
 
 def search_phase(x, *args):
     
@@ -332,9 +425,46 @@ def get_phase_from_energy_h1(energy, coefficients, bounds=[0,10]):
     res = minimize_scalar(search_phase, args=args, bounds=[0,10], method='bounded')
     return res.x
 
+def get_phase_from_energy(energy_value=12.000, harmonic_number=5, verbose=1):
+
+    ### find possible harmonics
+    harmonics = find_harmonics_given_energy(energy_points = [energy_value],
+                               only_max_harmonic=False)
+
+    harmonics = np.array(harmonics)
+    harmonics = harmonics[:,1].astype(int)
+
+
+    if(harmonic_number in harmonics):
+
+        energy1 = energy_value / harmonic_number
+        poly_coefficients = get_manaca_poly_coefficients()
+        phase = get_phase_from_energy_h1(energy1, poly_coefficients, bounds=[0,10])
+        phase = round(phase,3)
+        
+        if(verbose):
+            print('phase value is:', phase)
+            print('energy:', energy_value, 'keV')
+            print('h =', harmonic_number)
+            print('fundamental energy =', round(energy1, 3))
+
+    else:
+        if(verbose):
+            print('harmonic h =', harmonic_number, 'is not valid for this energy.')
+            print('please choose a valid harmonic number')
+        phase = np.nan
+            
+    if(verbose):
+        print('\n')    
+        print('possible harmonics for this energy are:')
+        for h in harmonics:
+            print('h =', h)
+        
+    return phase
+
 def define_ROI(pv_prefix='MNC:A:BASLER02', ROI_shape=(400,400), ROI_start=(0,0), ROI_binning=(1,1)):
     
-    pv_image = pv_prefix + ':image1:ArrayData'
+    # pv_image = pv_prefix + ':image1:ArrayData'
     
     # enable ROI
     epics.caput(pv_prefix +':ROI1:EnableCallbacks', 1, wait=True)
@@ -412,7 +542,7 @@ if __name__ == '__main__':
     img = beam[1:,1:]
     img_binned = bin_matrix(img, 8, 8)
         
-    adjust_exposure_time_sim(1, 2)
+    # adjust_exposure_time_sim(1, 2)
 
 
 
