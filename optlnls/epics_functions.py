@@ -425,7 +425,7 @@ def get_phase_from_energy_h1(energy, coefficients, bounds=[0,10]):
     res = minimize_scalar(search_phase, args=args, bounds=[0,10], method='bounded')
     return res.x
 
-def get_phase_from_energy(energy_value=12.000, harmonic_number=5, verbose=1):
+def get_phase_from_energy(energy_value=12.000, harmonic_number=5, poly_coeffs=[0]*6, verbose=1):
 
     ### find possible harmonics
     harmonics = find_harmonics_given_energy(energy_points = [energy_value],
@@ -438,8 +438,8 @@ def get_phase_from_energy(energy_value=12.000, harmonic_number=5, verbose=1):
     if(harmonic_number in harmonics):
 
         energy1 = energy_value / harmonic_number
-        poly_coefficients = get_manaca_poly_coefficients()
-        phase = get_phase_from_energy_h1(energy1, poly_coefficients, bounds=[0,10])
+        
+        phase = get_phase_from_energy_h1(energy1, poly_coeffs, bounds=[0,10])
         phase = round(phase,3)
         
         if(verbose):
