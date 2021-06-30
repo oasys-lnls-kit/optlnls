@@ -83,6 +83,16 @@ def derivate_keeping_size(x, y):
     return np.array(der)
 
 
+def flipx(x, y, keep_range=1):
+
+    yf = y[::-1]
+    xf = -1 * x[::-1]
+    if keep_range: 
+        xf = xf - (xf[0] - x[0])
+
+    return xf, yf
+
+
 def poly_any_degree(x, coefficients):
        
     y = 0
