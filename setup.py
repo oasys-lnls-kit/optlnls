@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="optlnls", # Replace with your own username
-    version="0.2.2",
+    version="0.2.3",
     author="Sergio Lordano",
     author_email="sergiolordano2@gmail.com",
     description="X-ray optics utilities",
@@ -13,6 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/oasys-lnls-kit/optlnls",
     packages=setuptools.find_packages(),
+    include_package_data=True,
     install_requires=[],
     classifiers=[
         "Programming Language :: Python :: 3",

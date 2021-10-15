@@ -40,8 +40,8 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
                      overSampling=200.0, fwhm_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Z', zlabel='', units=2, plot_title='', 
                      invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=0, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
-                     x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25,
-                     zero_pad_x=0, zero_pad_y=0, export_slices=0):
+                     x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25, z_range_min=float('NaN'), z_range_max=float('NaN'),
+                     zero_pad_x=0, zero_pad_y=0, export_slices=0, isdensity=1):
     """
     
 
@@ -179,12 +179,13 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         z_axis = beam2D[0,1:]*unitFactor
         x_axis = beam2D[1:,0]*unitFactor
         xz = np.array(beam2D[1:,1:]).transpose()
-        xz = xz / unitFactor**2 
-    
+            
     else:       
         z_axis = beam2D[1:,0]*unitFactor
         x_axis = beam2D[0,1:]*unitFactor
         xz = np.array(beam2D[1:,1:])
+        
+    if(isdensity):
         xz = xz / unitFactor**2
 
     # NORMALIZE TO PEAK DENSITY
@@ -218,11 +219,14 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
     x_mean = np.average(x_axis, weights=x_int)
     
     # FIND PEAK VALUES
-    xmax, zmax = find_peak(xz)
+    xmax, zmax = [[0, 0], [0, 0]]
     
     # CHANGE MINIMUM VALUE IF NEEDED (e.g. z_min_factor=1e-5 for log plots)
     if(z_min_factor != 0):
         xz[xz < z_min_factor * xz_max] = z_min_factor * xz_max 
+        
+        xz_max = np.max(xz)
+        xz_min = np.min(xz)
     
     
     if(cut==0): # PLOT INTEGRATED DISTRIBUTION
@@ -234,6 +238,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         x_cut = xz[np.abs(z_axis).argmin(), :]
     
     elif(cut==2): # PLOT CUT AT PEAK
+        xmax, zmax = find_peak(xz)
         x_cut_coord = x_axis[zmax[0]]
         z_cut_coord = z_axis[xmax[0]]
         z_cut = xz[:, zmax[0]]
@@ -423,20 +428,30 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
             axX.set_ylabel(zlabel, fontsize=fontsize)
 
         ############## MAKE PLOTS
+        extent = [x_axis.min(), x_axis.max(), z_axis.min(), z_axis.max()]
+        
+        
+        if(np.isnan(z_range_min)):
+            vmin = xz_min
+        else:
+            vmin = z_range_min
+        
+        if(np.isnan(z_range_max)):
+            vmax = xz_max
+        else:
+            vmax = z_range_max
         
         if(scale==0):
-            obj = ax2D.pcolormesh(x_axis, z_axis, xz, cmap=cmap) # 2D data
-            
+            obj = ax2D.imshow(xz, vmin=vmin, vmax=vmax, extent=extent, cmap=cmap) # 2D data
+    
         elif(scale==1):
             # If there is a negative or zero number, it will be replaced by half minimum value higher than 0.
-            if(xz_min <= 0.0):
+            if(vmin <= 0.0):
                 xz_min_except_0 = np.min(xz[xz>0])
                 xz[xz<=0.0] = xz_min_except_0/2.0
-                obj = ax2D.pcolormesh(x_axis, z_axis, xz, norm=LogNorm(vmin=xz.min(), vmax=xz_max), cmap=cmap)
+
+            obj = ax2D.imshow(xz, norm=LogNorm(vmin=vmin, vmax=vmax), extent=extent, cmap=cmap)
     
-            else:
-                obj = ax2D.pcolormesh(x_axis, z_axis, xz, norm=LogNorm(vmin=xz.min(), vmax=xz_max), cmap=cmap)
-            
             axX.set_yscale('log')
             axY.set_xscale('log')
         
