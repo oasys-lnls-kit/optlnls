@@ -449,6 +449,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
             if(vmin <= 0.0):
                 xz_min_except_0 = np.min(xz[xz>0])
                 xz[xz<=0.0] = xz_min_except_0/2.0
+                vmin = xz_min_except_0/2.0
 
             obj = ax2D.imshow(xz, norm=LogNorm(vmin=vmin, vmax=vmax), extent=extent, cmap=cmap)
     
