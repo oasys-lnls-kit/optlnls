@@ -9,7 +9,6 @@ Created on Sat Mar 21 11:03:10 2020
 import numpy as np
 from scipy import ndimage
 
-
 def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbins_y=100, nolost = 1, ref = 23, zeroPadding=0, gaussian_filter=0):
     """
     
@@ -127,7 +126,7 @@ def read_spectra_xyz(filename):
     return beam
 
 
-def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap_phase=0):
+def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap=0):
     """
     
 
@@ -151,6 +150,7 @@ def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap_phase=0):
 
     from array import array
     import srwlpy as srwl 
+    from skimage.restoration import unwrap_phase
     
     if int_to_extract == 4:
         arI = array('d', [0]*wfr.mesh.nx*wfr.mesh.ny) #"flat" 2D array to take intensity data
@@ -162,9 +162,11 @@ def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap_phase=0):
     int_mtx = np.array(arI)
     int_mtx = int_mtx.reshape((wfr.mesh.ny, wfr.mesh.nx))
     
-    if(unwrap_phase):
-        int_mtx = np.unwrap(int_mtx, axis=0, discont=np.pi)
-        int_mtx = np.unwrap(int_mtx, axis=1, discont=np.pi)
+    if(unwrap):
+        #int_mtx = np.unwrap(int_mtx, axis=0, discont=np.pi)
+        #int_mtx = np.unwrap(int_mtx, axis=1, discont=np.pi)
+        
+        int_mtx = unwrap_phase(int_mtx)
     
     mtx = np.zeros((wfr.mesh.ny+1, wfr.mesh.nx+1), dtype=np.float)
     mtx[0,1:] = np.linspace(wfr.mesh.xStart, wfr.mesh.xFin, wfr.mesh.nx)*1e3
