@@ -398,4 +398,58 @@ def test_cedro_refl():
     
     array_to_save = np.array([energy[0], Ru[0], Rs[0], Rp[0]]).transpose()
     np.savetxt('Si_refl_45deg_fresnel_eq.txt', array_to_save, fmt='%.6e', delimiter='\t')
+    
+    
+def transmission(energy_eV, thickness_m, density_gcm3, compound_str):
+    
+    '''
+    Calculates the transmission for a given material and energy using xraylib.
+    
+    Parameters:
+        
+        - energy_eV: energy in eV. [float, array or list]
+        - thickness_m: material thickness in meters. [float]
+        - density_gcm3: material density in g/cm³. [float]
+        - compound_str: material for calculating transmission. [sring]
+    
+    Returns:
+        
+        - transm: material transmission. [float or array]
+        
+    References:
+        
+        - Philip Willmott. An Introduction to Synchrotron Radiation, sec. 2.6.3, pp: 38-39, 2nd edition (2019).
+    
+    '''
+    
+    import xraylib
+
+    h = 4.13566743e-15; c = 299792458; # [eV.s] ; [m/s]
+    
+    if (isinstance(energy_eV, list)): energy_eV = np.array(energy_eV)
+    
+    if (isinstance(energy_eV, (np.ndarray))):
+    
+        n_Im_list = [];
+        
+        for energy in energy_eV:
+            
+            n_Im = xraylib.Refractive_Index_Im(compound_str, energy/1000, density_gcm3)
+            n_Im_list.append(n_Im)
+            
+        beta = np.array(n_Im_list)
+        
+    else:
+        
+        beta = xraylib.Refractive_Index_Im(compound_str, energy_eV/1000, density_gcm3)
+        
+    wl = h*c/energy_eV # [m]
+        
+    k = 2*np.pi/wl # [1/m]
+        
+    mu = 2*beta*k # [1/m]
+    
+    transm = np.exp(-1*mu*thickness_m)
+
+    return transm
 
