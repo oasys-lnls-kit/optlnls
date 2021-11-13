@@ -442,7 +442,8 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
             vmax = z_range_max
         
         if(scale==0):
-            obj = ax2D.imshow(xz, vmin=vmin, vmax=vmax, origin='lower', extent=extent, cmap=cmap) # 2D data
+            obj = ax2D.imshow(xz, vmin=vmin, vmax=vmax, origin='lower', 
+                              aspect='auto', extent=extent, cmap=cmap) # 2D data
     
         elif(scale==1):
             # If there is a negative or zero number, it will be replaced by half minimum value higher than 0.
@@ -451,7 +452,8 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
                 xz[xz<=0.0] = xz_min_except_0/2.0
                 vmin = xz_min_except_0/2.0
 
-            obj = ax2D.imshow(xz, norm=LogNorm(vmin=vmin, vmax=vmax), origin='lower', extent=extent, cmap=cmap)
+            obj = ax2D.imshow(xz, norm=LogNorm(vmin=vmin, vmax=vmax), origin='lower', 
+                              aspect='auto', extent=extent, cmap=cmap)
     
             axX.set_yscale('log')
             axY.set_xscale('log')
