@@ -453,3 +453,51 @@ def transmission(energy_eV, thickness_m, density_gcm3, compound_str):
 
     return transm
 
+
+def reflectivity(energy_eV, density_gcm3, compound_str, theta_surface_rad):
+    
+    '''
+    Calculates the reflectivity for a given material, energy and incidence angle using xraylib.
+    
+    Parameters:
+        
+        - energy_eV: energy in eV. [float, array or list]
+        - density_gcm3: material density in g/cm³. [float]
+        - compound_str: material for calculating transmission. [sring]
+        - theta_surface_rad: incidence angle in relation to the surface in rad. [float]
+    
+    Returns:
+        
+        - Rs: reflectivity for s-polarization. [float or array]
+        - Rp: reflectivity for p-polarization. [float or array]
+        - Runpol: reflectivity for unpolarized light. [float or array]
+        
+    References:
+        
+        - Eugene Hecht. Optics, sec. 4.6.2, pp: 123-125, 5th edition (2017).
+    
+    '''
+    
+    import xraylib
+    
+    if (isinstance(energy_eV, list)): energy_eV = np.array(energy_eV)
+    
+    if (isinstance(energy_eV, (np.ndarray))):
+    
+        n_list = [];
+        
+        for energy in energy_eV:
+            
+            n_list.append(xraylib.Refractive_Index(compound_str, energy/1000, density_gcm3))
+            
+        n = np.array(n_list)
+        
+    else:
+        
+        n = xraylib.Refractive_Index(compound_str, energy_eV/1000, density_gcm3)
+        
+    
+    Rs, Rp, Runpol = fresnel_reflectivity(n1=1, n2=n, theta_surface_deg=np.rad2deg(theta_surface_rad))
+    
+    return Rs, Rp, Runpol
+
