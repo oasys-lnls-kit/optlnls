@@ -22,6 +22,8 @@ def get_k(Period, what_harmonic, Energy, k_ext):
     E = 3.0e9; e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
     gamma = E*e/(m_e*c**2)
     n = [2*i+1 for i in range(50)]
+    har = np.nan 
+    k = np.nan
     for h_n in n:
         K2 =  (8*h_n*pi*h_cut*c*(gamma**2)/Period/Energy-2)
         if K2 > 0:
@@ -70,7 +72,7 @@ def srw_undulator_spectrum(mag_field=[], electron_beam=[], energy_grid=[], sampl
     :sampling_mesh: list containing: [observation plane distance from source [m], range X [m], range Y [m]]
     :precision: list containing: [h_max: maximum harmonic number to take into account, longitudinal precision factor, azimuthal precision factor (1 is standard, >1 is more accurate]
     """    
-        
+
     from srwlib import SRWLMagFldU, SRWLMagFldH, SRWLPartBeam, SRWLStokes
     from srwlpy import CalcStokesUR
     from numpy import array as nparray
@@ -117,10 +119,10 @@ def srw_undulator_spectrum(mag_field=[], electron_beam=[], energy_grid=[], sampl
     stkF.mesh.zStart = sampling_mesh[0] #longitudinal position [m] at which UR has to be calculated
     stkF.mesh.eStart = energy_grid[0] #initial photon energy [eV]
     stkF.mesh.eFin = energy_grid[1] #final photon energy [eV]
-    stkF.mesh.xStart = -sampling_mesh[1]/2.0 #initial horizontal position [m]
-    stkF.mesh.xFin = sampling_mesh[1]/2.0 #final horizontal position [m]
-    stkF.mesh.yStart = -sampling_mesh[2]/2.0 #initial vertical position [m]
-    stkF.mesh.yFin = sampling_mesh[2]/2.0 #final vertical position [m]
+    stkF.mesh.xStart = sampling_mesh[1] #initial horizontal position [m]
+    stkF.mesh.xFin = sampling_mesh[2] #final horizontal position [m]
+    stkF.mesh.yStart = sampling_mesh[3] #initial vertical position [m]
+    stkF.mesh.yFin = sampling_mesh[4] #final vertical position [m]
            
     
     #**********************Calculation (SRWLIB function calls)

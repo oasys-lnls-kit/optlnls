@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="optlnls", # Replace with your own username
-    version="0.2.4",
+    name="optlnls", 
+    version="0.2.5",
     author="Sergio Lordano",
     author_email="sergiolordano2@gmail.com",
     description="X-ray optics utilities",
