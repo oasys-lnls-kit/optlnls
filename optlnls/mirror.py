@@ -501,3 +501,158 @@ def reflectivity(energy_eV, density_gcm3, compound_str, theta_surface_rad):
     
     return Rs, Rp, Runpol
 
+
+def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52, substrate_density_gcm3=2.33, compound1_str='Mo', compound2_str='B4C', 
+                        substrate_str='Si', theta_surface_rad=18.78e-03, N_periods=150, mlayer_period_m = 3.07e-09, gamma=0.4):
+    
+    '''
+    Calculates the s-polarization reflectivity for multilayers using xraylib.
+    
+    Parameters:
+        
+        - energy_eV: energy in eV. [float, array or list]
+        - density1_gcm3: material 1 density in g/cm³. [float]
+        - density2_gcm3: material 2 density in g/cm³. [float]
+        - substrate_density_gcm3: substrate density in g/cm³. [float]
+        - compound1_str: material 1 of the multilayer period. [sring]
+        - compound2_str: material 2 of the multilayer period. [sring]
+        - substrate_str: multilayer substrate. [string]
+        - theta_surface_rad: incidence angle in relation to the surface in rad. [float]
+        - N_periods: Number of periods of the multilayer. [int]
+        - mlayer_period_m: multilayer period in m. [float]
+        - gamma: ratio between layer thickness of material 1 and multilayer period. [float]
+        
+    The Multilayer is considered here as:
+        
+        
+                           vacuum     (0)
+                |------------------------------|  
+                |          material 1 (1)      |  
+                |------------------------------|   Bilayer 1
+                |          material 2 (2)      |  
+                |------------------------------|  
+                |          .                   |
+                |          .                   |
+                |          .                   |
+                |------------------------------|  
+                |          material 1 (N-1)    |  
+                |------------------------------|   Bilayer N
+                |          material 2 (N)      |  
+                |------------------------------|  
+                |                              |
+                |///////// substrate //////////|
+                |                              |
+        
+        
+    
+    Returns:
+        
+        - R: multilayer reflectivity. [float or array]
+        
+    References:
+        
+        - Als Nielsen. Elements of Modern X-ray Physics, sec. 3.6, pp: 87-88, 2nd edition (Wiley, 2011). 
+    
+    '''
+    
+    # Function:
+    
+    def mlayer_reflectivity_singleE(energy_eV, density1_gcm3, density2_gcm3, substrate_density_gcm3, compound1_str, compound2_str, substrate_str, 
+                                    theta_surface_rad, N_periods, mlayer_period_m, gamma):
+        
+        import xraylib
+        
+        h = 4.13566743e-15; c = 299792458; # [eV.s] ; [m/s]
+        
+        i = 0.0 + 1j
+        
+        
+        # Thickness:
+        
+        t1 = gamma * mlayer_period_m
+        t2 = (1.0 - gamma) * mlayer_period_m
+        
+        
+        # Refractive Indexes:
+        
+        n1 = xraylib.Refractive_Index(compound1_str, energy_eV/1000, density1_gcm3)
+        n2 = xraylib.Refractive_Index(compound2_str, energy_eV/1000, density2_gcm3)
+        ns = xraylib.Refractive_Index(substrate_str, energy_eV/1000, substrate_density_gcm3)
+        
+        
+        # Angles:
+        
+        θi = (np.pi/2)-theta_surface_rad # incidence angle  (radians)
+        θ1 = np.arcsin(1/n1*np.sin(θi))  # angle in layer 1 (radians)
+        θ2 = np.arcsin(n1/n2*np.sin(θ1)) # angle in layer 2 (radians)
+        θs = np.arcsin(n2/ns*np.sin(θ2)) # angle in substr. (radians)
+        
+        
+        # Scattering vector Q:
+        
+        wl = h*c/energy_eV # [m]
+            
+        k = 2*np.pi/wl # [1/m] 
+        
+        k1 = n1*k; k2 = n2*k; ks = ns*k; 
+        
+        Q = 2*k*np.sin((np.pi/2)-θi); Q1 = 2*k1*np.sin((np.pi/2)-θ1); Q2 = 2*k2*np.sin((np.pi/2)-θ2); Qs = 2*ks*np.sin((np.pi/2)-θs);
+        
+        p1 = np.exp(i*t1*Q1); p2 = np.exp(i*t2*Q2); # phase factors
+        
+        
+        # Fresnel Reflectivity:
+        
+        r12 = (Q1 - Q2) / (Q1 + Q2)
+        r21 = (Q2 - Q1) / (Q2 + Q1) 
+        r2s = (Q2 - Qs) / (Q2 + Qs)
+        rv1 = (Q  - Q1) / (Q  + Q1)
+        
+        
+        # Parrat's recursive method:
+        
+        r = (r12 + r2s*p2) / (1 + r12*r2s*p2) # r12
+        
+        for n in range(2*N_periods-2):
+            
+            if ((n%2) == 0):
+                
+                r = (r21 + r*p1) / (1 + r21*r*p1) # r21
+                
+            else:
+                
+                r = (r12 + r*p2) / (1 + r12*r*p2) # r12
+                
+        r = (rv1 + r*p1) / (1 + rv1*r*p1) # r01
+        
+        R = np.abs(r)**2
+        
+        return R
+    
+    
+    # Calculate Reflectivity:
+    
+    if (isinstance(energy_eV, list) or isinstance(energy_eV, tuple) or isinstance(energy_eV, set) or isinstance(energy_eV, (np.ndarray))):
+    
+        R_list = [];
+        
+        for energy in energy_eV:
+            
+            R = mlayer_reflectivity_singleE(energy_eV=energy, density1_gcm3=density1_gcm3, density2_gcm3=density2_gcm3, 
+                                            substrate_density_gcm3=substrate_density_gcm3, compound1_str=compound1_str, 
+                                            compound2_str=compound2_str, substrate_str=substrate_str, theta_surface_rad=theta_surface_rad, 
+                                            N_periods=N_periods, mlayer_period_m=mlayer_period_m, gamma=gamma)
+            
+            R_list.append(R)
+            
+        R = np.array(R_list)
+        
+    else:
+        
+        R = mlayer_reflectivity_singleE(energy_eV=energy_eV, density1_gcm3=density1_gcm3, density2_gcm3=density2_gcm3,
+                                        substrate_density_gcm3=substrate_density_gcm3, compound1_str=compound1_str,
+                                        compound2_str=compound2_str, substrate_str=substrate_str, theta_surface_rad=theta_surface_rad,
+                                        N_periods=N_periods, mlayer_period_m=mlayer_period_m, gamma=gamma)
+        
+    return R
+
