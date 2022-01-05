@@ -126,7 +126,8 @@ def read_spectra_xyz(filename):
     return beam
 
 
-def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap=0):
+def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap=0,
+                 flip_x=0, flip_y=0):
     """
     
 
@@ -150,7 +151,6 @@ def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap=0):
 
     from array import array
     import srwlpy as srwl 
-    from skimage.restoration import unwrap_phase
     
     if int_to_extract == 4:
         arI = array('d', [0]*wfr.mesh.nx*wfr.mesh.ny) #"flat" 2D array to take intensity data
@@ -163,17 +163,31 @@ def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap=0):
     int_mtx = int_mtx.reshape((wfr.mesh.ny, wfr.mesh.nx))
     
     if(unwrap):
-        #int_mtx = np.unwrap(int_mtx, axis=0, discont=np.pi)
-        #int_mtx = np.unwrap(int_mtx, axis=1, discont=np.pi)
-        
-        int_mtx = unwrap_phase(int_mtx)
+        try:
+            from skimage.restoration import unwrap_phase
+            int_mtx = unwrap_phase(int_mtx)
+        except:
+            int_mtx = np.unwrap(int_mtx, axis=0, discont=np.pi)
+            int_mtx = np.unwrap(int_mtx, axis=1, discont=np.pi)
+            
+    x = np.linspace(wfr.mesh.xStart, wfr.mesh.xFin, wfr.mesh.nx)*1e3
+    y = np.linspace(wfr.mesh.yStart, wfr.mesh.yFin, wfr.mesh.ny)*1e3
+            
+    if flip_x:
+        x = x[::-1]
+        int_mtx = np.fliplr(int_mtx)
+
+    if flip_y:
+        y = y[::-1]
+        int_mtx = np.flipud(int_mtx)
     
     mtx = np.zeros((wfr.mesh.ny+1, wfr.mesh.nx+1), dtype=np.float)
-    mtx[0,1:] = np.linspace(wfr.mesh.xStart, wfr.mesh.xFin, wfr.mesh.nx)*1e3
-    mtx[1:,0] = np.linspace(wfr.mesh.yStart, wfr.mesh.yFin, wfr.mesh.ny)*1e3
+    mtx[0,1:] = x
+    mtx[1:,0] = y
     mtx[1:,1:] = int_mtx
     
     return mtx
+
 
 
 def read_srw_int(filename):
