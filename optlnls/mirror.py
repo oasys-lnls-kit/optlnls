@@ -426,7 +426,7 @@ def transmission(energy_eV, thickness_m, density_gcm3, compound_str):
 
     h = 4.13566743e-15; c = 299792458; # [eV.s] ; [m/s]
     
-    if (isinstance(energy_eV, list)): energy_eV = np.array(energy_eV)
+    if (isinstance(energy_eV, list) or isinstance(energy_eV, tuple)): energy_eV = np.array(energy_eV)
     
     if (isinstance(energy_eV, (np.ndarray))):
     
@@ -480,9 +480,7 @@ def reflectivity(energy_eV, density_gcm3, compound_str, theta_surface_rad):
     
     import xraylib
     
-    if (isinstance(energy_eV, list)): energy_eV = np.array(energy_eV)
-    
-    if (isinstance(energy_eV, (np.ndarray))):
+    if (isinstance(energy_eV, list) or isinstance(energy_eV, tuple) or isinstance(energy_eV, (np.ndarray))):
     
         n_list = [];
         
@@ -503,10 +501,11 @@ def reflectivity(energy_eV, density_gcm3, compound_str, theta_surface_rad):
 
 
 def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52, substrate_density_gcm3=2.33, compound1_str='Mo', compound2_str='B4C', 
-                        substrate_str='Si', theta_surface_rad=18.78e-03, N_periods=150, mlayer_period_m = 3.07e-09, gamma=0.4):
+                        substrate_str='Si', theta_surface_rad=18.78e-03, N_periods=150, mlayer_period_m = 3.07e-09, gamma=0.4,
+                        rms_roughness_12=0.0, rms_roughness_21=0.0, rms_roughness_2s=0.0, rms_roughness_v1=0.0):
     
     '''
-    Calculates the s-polarization reflectivity for multilayers using xraylib.
+    Calculates the s-polarization reflectivity for multilayers using xraylib. Roughness is modeled using the Névot-Croce factor.
     
     Parameters:
         
@@ -521,6 +520,10 @@ def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52
         - N_periods: Number of periods of the multilayer. [int]
         - mlayer_period_m: multilayer period in m. [float]
         - gamma: ratio between layer thickness of material 1 and multilayer period. [float]
+        - rms_roughness_12: roughness (sigma) at the material 1 / material 2 interface in m. [float]
+        - rms_roughness_21: roughness (sigma) at the material 2 / material 1 interface in m. [float]
+        - rms_roughness_2s: roughness (sigma) at the material 2 / substrate interface in m. [float]
+        - rms_roughness_v1: roughness (sigma) at the vaccum / material 1 interface in m. [float]
         
     The Multilayer is considered here as:
         
@@ -558,7 +561,11 @@ def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52
     # Function:
     
     def mlayer_reflectivity_singleE(energy_eV, density1_gcm3, density2_gcm3, substrate_density_gcm3, compound1_str, compound2_str, substrate_str, 
-                                    theta_surface_rad, N_periods, mlayer_period_m, gamma):
+                                    theta_surface_rad, N_periods, mlayer_period_m, gamma, rms_roughness_12, rms_roughness_21, rms_roughness_2s, 
+                                    rms_roughness_v1):
+        
+        
+        # Packages and constants:
         
         import xraylib
         
@@ -580,12 +587,12 @@ def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52
         ns = xraylib.Refractive_Index(substrate_str, energy_eV/1000, substrate_density_gcm3)
         
         
-        # Angles:
+        # Angles (Snell’s law):
         
-        θi = (np.pi/2)-theta_surface_rad # incidence angle  (radians)
-        θ1 = np.arcsin(1/n1*np.sin(θi))  # angle in layer 1 (radians)
-        θ2 = np.arcsin(n1/n2*np.sin(θ1)) # angle in layer 2 (radians)
-        θs = np.arcsin(n2/ns*np.sin(θ2)) # angle in substr. (radians)
+        θi = (np.pi/2)-theta_surface_rad # incidence angle  [rad]
+        θ1 = np.arcsin( 1/n1*np.sin(θi)) # angle in layer 1 [rad]
+        θ2 = np.arcsin(n1/n2*np.sin(θ1)) # angle in layer 2 [rad]
+        θs = np.arcsin(n2/ns*np.sin(θ2)) # angle in substr. [rad]
         
         
         # Scattering vector Q:
@@ -598,15 +605,23 @@ def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52
         
         Q = 2*k*np.sin((np.pi/2)-θi); Q1 = 2*k1*np.sin((np.pi/2)-θ1); Q2 = 2*k2*np.sin((np.pi/2)-θ2); Qs = 2*ks*np.sin((np.pi/2)-θs);
         
-        p1 = np.exp(i*t1*Q1); p2 = np.exp(i*t2*Q2); # phase factors
+        p1 = np.exp(i*t1*Q1); p2 = np.exp(i*t2*Q2); # Phase factors
         
         
-        # Fresnel Reflectivity:
+        #  Névot-Croce formula:
         
-        r12 = (Q1 - Q2) / (Q1 + Q2)
-        r21 = (Q2 - Q1) / (Q2 + Q1) 
-        r2s = (Q2 - Qs) / (Q2 + Qs)
-        rv1 = (Q  - Q1) / (Q  + Q1)
+        rough_12 = np.exp(-0.5*Q1*Q2*rms_roughness_12**2)
+        rough_21 = np.exp(-0.5*Q2*Q1*rms_roughness_21**2)
+        rough_2s = np.exp(-0.5*Q2*Qs*rms_roughness_2s**2)
+        rough_v1 = np.exp(-0.5*Q *Q1*rms_roughness_v1**2)
+        
+        
+        # Fresnel coefficients:
+        
+        r12 = rough_12*( (Q1 - Q2) / (Q1 + Q2) ) # r'12
+        r21 = rough_21*( (Q2 - Q1) / (Q2 + Q1) ) # r'21
+        r2s = rough_2s*( (Q2 - Qs) / (Q2 + Qs) ) # r'2s
+        rv1 = rough_v1*( (Q  - Q1) / (Q  + Q1) ) # r'v1
         
         
         # Parrat's recursive method:
@@ -617,13 +632,16 @@ def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52
             
             if ((n%2) == 0):
                 
-                r = (r21 + r*p1) / (1 + r21*r*p1) # r21
+                r = ((r21 + r*p1) / (1 + r21*r*p1)) # r21
                 
             else:
                 
-                r = (r12 + r*p2) / (1 + r12*r*p2) # r12
+                r = ((r12 + r*p2) / (1 + r12*r*p2)) # r12
                 
         r = (rv1 + r*p1) / (1 + rv1*r*p1) # r01
+        
+        
+        # Reflectivity:
         
         R = np.abs(r)**2
         
@@ -641,7 +659,8 @@ def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52
             R = mlayer_reflectivity_singleE(energy_eV=energy, density1_gcm3=density1_gcm3, density2_gcm3=density2_gcm3, 
                                             substrate_density_gcm3=substrate_density_gcm3, compound1_str=compound1_str, 
                                             compound2_str=compound2_str, substrate_str=substrate_str, theta_surface_rad=theta_surface_rad, 
-                                            N_periods=N_periods, mlayer_period_m=mlayer_period_m, gamma=gamma)
+                                            N_periods=N_periods, mlayer_period_m=mlayer_period_m, gamma=gamma, rms_roughness_12=rms_roughness_12, 
+                                            rms_roughness_21=rms_roughness_21, rms_roughness_2s=rms_roughness_2s, rms_roughness_v1=rms_roughness_v1)
             
             R_list.append(R)
             
@@ -652,7 +671,9 @@ def mlayer_reflectivity(energy_eV=11000, density1_gcm3=10.22, density2_gcm3=2.52
         R = mlayer_reflectivity_singleE(energy_eV=energy_eV, density1_gcm3=density1_gcm3, density2_gcm3=density2_gcm3,
                                         substrate_density_gcm3=substrate_density_gcm3, compound1_str=compound1_str,
                                         compound2_str=compound2_str, substrate_str=substrate_str, theta_surface_rad=theta_surface_rad,
-                                        N_periods=N_periods, mlayer_period_m=mlayer_period_m, gamma=gamma)
-        
+                                        N_periods=N_periods, mlayer_period_m=mlayer_period_m, gamma=gamma, rms_roughness_12=rms_roughness_12,
+                                        rms_roughness_21=rms_roughness_21, rms_roughness_2s=rms_roughness_2s, rms_roughness_v1=rms_roughness_v1)
+    
+    
     return R
 
