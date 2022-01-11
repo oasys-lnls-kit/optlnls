@@ -9,7 +9,7 @@ Created on Sat Mar 21 11:03:10 2020
 import numpy as np
 from scipy import ndimage
 
-def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbins_y=100, nolost = 1, ref = 23, gaussian_filter=0):
+def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbins_y=100, nolost = 1, ref = 23, zeroPadding=0, gaussian_filter=0):
     """
     
 
