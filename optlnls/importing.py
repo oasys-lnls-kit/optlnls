@@ -9,7 +9,7 @@ Created on Sat Mar 21 11:03:10 2020
 import numpy as np
 from scipy import ndimage
 
-def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbins_y=100, nolost = 1, ref = 23, zeroPadding=0, gaussian_filter=0):
+def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbins_y=100, nolost = 1, ref = 23, gaussian_filter=0):
     """
     
 
@@ -50,34 +50,34 @@ def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbin
     xy = histo2D['histogram']
     
     
-    if(zeroPadding==0):
-        XY = np.zeros((nbins_y+1,nbins_x+1))
-        XY[1:,0] = y_axis
-        XY[0,1:] = x_axis
-        XY[1:,1:] = np.array(xy).transpose()
+    # if(zeroPadding==0):
+    XY = np.zeros((nbins_y+1,nbins_x+1))
+    XY[1:,0] = y_axis
+    XY[0,1:] = x_axis
+    XY[1:,1:] = np.array(xy).transpose()
+    
+    if(gaussian_filter != 0):
+        XY[1:,1:] = ndimage.gaussian_filter(np.array(xy).transpose(), gaussian_filter)
         
-        if(gaussian_filter != 0):
-            XY[1:,1:] = ndimage.gaussian_filter(np.array(xy).transpose(), gaussian_filter)
+    # else:
+    #     x_step = x_axis[1]-x_axis[0]
+    #     y_step = y_axis[1]-y_axis[0]
+    #     fct = zeroPadding
+    #     XY = np.zeros((nbins_y+15, nbins_x+15))
+    #     XY[8:nbins_y+8,0] = y_axis
+    #     XY[0,8:nbins_x+8] = x_axis
+    #     XY[8:nbins_y+8,8:nbins_x+8] = np.array(xy).transpose()
         
-    else:
-        x_step = x_axis[1]-x_axis[0]
-        y_step = y_axis[1]-y_axis[0]
-        fct = zeroPadding
-        XY = np.zeros((nbins_y+15, nbins_x+15))
-        XY[8:nbins_y+8,0] = y_axis
-        XY[0,8:nbins_x+8] = x_axis
-        XY[8:nbins_y+8,8:nbins_x+8] = np.array(xy).transpose()
+    #     XY[1,0] = np.min(y_axis) - (np.max(y_axis) - np.min(y_axis))*fct
+    #     XY[2:-1,0] = np.linspace(y_axis[0] - 6*y_step, y_axis[-1] + 6*y_step, nbins_y+12)
+    #     XY[-1,0] = np.max(y_axis) + (np.max(y_axis) - np.min(y_axis))*fct
         
-        XY[1,0] = np.min(y_axis) - (np.max(y_axis) - np.min(y_axis))*fct
-        XY[2:-1,0] = np.linspace(y_axis[0] - 6*y_step, y_axis[-1] + 6*y_step, nbins_y+12)
-        XY[-1,0] = np.max(y_axis) + (np.max(y_axis) - np.min(y_axis))*fct
+    #     XY[0,1] = np.min(x_axis) - (np.max(x_axis) - np.min(x_axis))*fct
+    #     XY[0,2:-1] = np.linspace(x_axis[0] - 6*x_step, x_axis[-1] + 6*x_step, nbins_x+12)
+    #     XY[0,-1] = np.max(x_axis) + (np.max(x_axis) - np.min(x_axis))*fct
         
-        XY[0,1] = np.min(x_axis) - (np.max(x_axis) - np.min(x_axis))*fct
-        XY[0,2:-1] = np.linspace(x_axis[0] - 6*x_step, x_axis[-1] + 6*x_step, nbins_x+12)
-        XY[0,-1] = np.max(x_axis) + (np.max(x_axis) - np.min(x_axis))*fct
-        
-        if(gaussian_filter != 0):
-            XY[3:nbins_y+3,3:nbins_x+3] = ndimage.gaussian_filter(np.array(xy).transpose(), gaussian_filter)
+        # if(gaussian_filter != 0):
+        #     XY[3:nbins_y+3,3:nbins_x+3] = ndimage.gaussian_filter(np.array(xy).transpose(), gaussian_filter)
     
     
     return XY
