@@ -38,7 +38,7 @@ def beam_integral(mtx):
 
 def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, textA=0, textB=0, textC=0, textD=0, fitType=0, 
                      overSampling=200.0, fwhm_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Z', zlabel='', units=2, plot_title='', 
-                     invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=0, show_colorbar=0, z_min_factor=0,
+                     invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=1, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
                      x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25, z_range_min=float('NaN'), z_range_max=float('NaN'),
                      zero_pad_x=0, zero_pad_y=0, export_slices=0, isdensity=1):
@@ -281,12 +281,8 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
     z_cut_rms = calc_rms(z_axis, z_cut)
     x_cut_rms = calc_rms(x_axis, x_cut)
     
-    if(fwhm_zeroPadding == 0):
-        z_cut_fwhm = get_fwhm(z_axis, z_cut, oversampling=overSampling, zero_padding=False, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext, npoints=1)
-        x_cut_fwhm = get_fwhm(x_axis, x_cut, oversampling=overSampling, zero_padding=False, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext, npoints=1)
-    else:
-        z_cut_fwhm = get_fwhm(z_axis, z_cut, oversampling=overSampling, zero_padding=True, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
-        x_cut_fwhm = get_fwhm(x_axis, x_cut, oversampling=overSampling, zero_padding=True, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
+    z_cut_fwhm = get_fwhm(z_axis, z_cut, oversampling=overSampling, zero_padding=zero_padding, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
+    x_cut_fwhm = get_fwhm(x_axis, x_cut, oversampling=overSampling, zero_padding=zero_padding, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
     
         # ==================================================================== #
     # === FITTING DISTRIBUTIONS ========================================== #
@@ -318,13 +314,9 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
             poptlg_x_cut, perrlg_x_cut = fit_lorentz_gauss(x_axis, x_cut, [x_mean, x_cut_max, x_cut_rms, x_cut_max, x_cut_rms], 10000)
             x_cut_fit = lorentz_gauss_function(x_axis, poptlg_x_cut[0], poptlg_x_cut[1], poptlg_x_cut[2], poptlg_x_cut[3], poptlg_x_cut[4])
       
-        if(fwhm_zeroPadding == 0):
-            z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=False, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
-            x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=False, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
-        else:
-            z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=True, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
-            x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=True, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
-        
+        z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
+        x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
+
         z_cut_fit_rms = calc_rms(z_axis, z_cut_fit)
         x_cut_fit_rms = calc_rms(x_axis, x_cut_fit)
         
@@ -591,8 +583,38 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
 
         if(outfilename != ''):
             figure.savefig(outfilename, dpi=400, transparent=False)
-		
+
         plt.show()
+        		
+        #########################################################################
+        #### RETURN OUTPUT AS DICT
+        
+        output = {'rms_x': x_cut_rms,
+                  'rms_z': z_cut_rms,
+                  'fwhm_x': x_cut_fwhm[0],
+                  'fwhm_z': z_cut_fwhm[0],
+                  'fwhm_x_coords': x_cut_fwhm[1:],
+                  'fwhm_z_coords': z_cut_fwhm[1:],
+                  'integral': integral,
+                  'mean_x': x_mean,
+                  'mean_z': z_mean,
+                  'cut_coord_x': x_cut_coord,
+                  'cut_coord_z': z_cut_coord,
+                  'peak_value': xz_max,
+                  'min_value': xz_min,
+                  }
+        
+        if(fitType != 0):
+            output['fit_rms_x'] = x_cut_fit_rms
+            output['fit_rms_z'] = z_cut_fit_rms
+            output['fit_fwhm_x'] = x_cut_fit_fwhm[0]
+            output['fit_fwhm_z'] = z_cut_fit_fwhm[0]           
+            output['fit_fwhm_x_coords'] = x_cut_fit_fwhm[1:]
+            output['fit_fwhm_z_coords'] = z_cut_fit_fwhm[1:]
+
+
+        return output
+
 			
 def set_ticks_size(fontsize):
     for tick in plt.gca().xaxis.get_major_ticks():
