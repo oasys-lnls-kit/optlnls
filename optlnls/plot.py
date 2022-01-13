@@ -589,28 +589,28 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         #########################################################################
         #### RETURN OUTPUT AS DICT
         
-        output = {'rms_x': x_cut_rms,
-                  'rms_z': z_cut_rms,
-                  'fwhm_x': x_cut_fwhm[0],
-                  'fwhm_z': z_cut_fwhm[0],
-                  'fwhm_x_coords': x_cut_fwhm[1:],
-                  'fwhm_z_coords': z_cut_fwhm[1:],
-                  'integral': integral,
-                  'mean_x': x_mean,
-                  'mean_z': z_mean,
-                  'cut_coord_x': x_cut_coord,
-                  'cut_coord_z': z_cut_coord,
-                  'peak_value': xz_max,
-                  'min_value': xz_min,
-                  }
-        
-        if(fitType != 0):
-            output['fit_rms_x'] = x_cut_fit_rms
-            output['fit_rms_z'] = z_cut_fit_rms
-            output['fit_fwhm_x'] = x_cut_fit_fwhm[0]
-            output['fit_fwhm_z'] = z_cut_fit_fwhm[0]           
-            output['fit_fwhm_x_coords'] = x_cut_fit_fwhm[1:]
-            output['fit_fwhm_z_coords'] = z_cut_fit_fwhm[1:]
+    output = {'rms_x': x_cut_rms,
+              'rms_z': z_cut_rms,
+              'fwhm_x': x_cut_fwhm[0],
+              'fwhm_z': z_cut_fwhm[0],
+              'fwhm_x_coords': x_cut_fwhm[1:],
+              'fwhm_z_coords': z_cut_fwhm[1:],
+              'integral': integral,
+              'mean_x': x_mean,
+              'mean_z': z_mean,
+              'cut_coord_x': x_cut_coord,
+              'cut_coord_z': z_cut_coord,
+              'peak_value': xz_max,
+              'min_value': xz_min,
+              }
+    
+    if(fitType != 0):
+        output['fit_rms_x'] = x_cut_fit_rms
+        output['fit_rms_z'] = z_cut_fit_rms
+        output['fit_fwhm_x'] = x_cut_fit_fwhm[0]
+        output['fit_fwhm_z'] = z_cut_fit_fwhm[0]           
+        output['fit_fwhm_x_coords'] = x_cut_fit_fwhm[1:]
+        output['fit_fwhm_z_coords'] = z_cut_fit_fwhm[1:]
 
 
         return output
