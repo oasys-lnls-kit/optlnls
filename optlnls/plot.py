@@ -613,7 +613,7 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
         output['fit_fwhm_z_coords'] = z_cut_fit_fwhm[1:]
 
 
-        return output
+    return output
 
 			
 def set_ticks_size(fontsize):
