@@ -624,132 +624,10 @@ def set_ticks_size(fontsize):
 
 
 
-
-def plot_xy_old(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='', 
-            xlim=[], ylim=[], minorticks=1, grid_major=1, grid_minor=0,
-            figsize=(4.5, 3.0), adjust=[0.15, 0.15, 0.97, 0.97], 
-            legend_loc='best', xscale='linear', yscale='linear',
-            savepath='', savedpi=300, showplot=1):
-
-    
-    #### make sure that x and y are lists or arrays
-    
-    x_is_single = len(np.shape(x)) <= 1
-    y_is_single = len(np.shape(y)) <= 1
-    fmts_is_single = len(np.shape(fmts)) <= 1
-    labels_is_single = len(np.shape(labels)) <= 1        
-
-    if x_is_single: 
-        x = [x]        
-
-    if y_is_single: 
-        y = [y]
-    print(fmts)
-    if fmts_is_single and fmts != []: 
-        fmts = [fmts]
-    print(fmts)
-    if labels_is_single and labels != []: 
-        labels = [labels]
-        
-    n = len(x) # number of curves to plot
-        
-    #### check plot options
-    
-    legends = 1
-    if(labels == []):
-        labels = ['']*n
-        legends = 0
-    print(fmts)
-    if(fmts == []):
-        aux = []
-        for i in range(n):
-            aux.append('-C{0:d}'.format(i))
-        fmts = aux
-        
-    print(n)
-    print(labels)
-    print(fmts)
-        
-    #### plot
-
-    fig, ax = plt.subplots(figsize=figsize)
-    plt.subplots_adjust(*adjust)
-    
-    for i in range(n):        
-        plt.plot(x[i], y[i], fmts[i], label=labels[i])
-    
-    plt.minorticks_on()
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.tick_params(which='both', axis='both', direction='in', top=True, right=True)
-    
-    if(legends):
-        plt.legend(loc=legend_loc)
-        
-    if(xlim != []):
-        plt.xlim(xlim)
-    
-    if(ylim != []):
-        plt.ylim(ylim)
-        
-    if(grid_major):
-        plt.grid(which='major', alpha=0.5)
-
-    if(grid_minor):
-        plt.grid(which='minor', alpha=0.2)
-        
-    if(xscale in ['log', 'logarithm']):
-        plt.xscale('log')
-
-    if(yscale in ['log', 'logarithm']):
-        plt.yscale('log')
-
-    if(savepath != ''):
-        plt.savefig(savepath, dpi=savedpi)
-        
-    if(showplot):
-        plt.show()
-    
-    return fig, ax
-
- 
-
-    # #### make sure that x and y are lists or arrays
-    
-    # x_is_single = not isinstance(x[0], (list, tuple, np.ndarray))
-    # y_is_single = not isinstance(y[0], (list, tuple, np.ndarray))
-
-    # if x_is_single: 
-    #     x = [x]        
-
-    # if y_is_single: 
-    #     y = [y]
-        
-
-    # n = len(x) # number of curves to plot
-        
-    # #### check plot options
-    
-    # legends = 1
-    # if(labels == []):
-    #     labels = ['']*n
-    #     legends = 0
-
-    # if(fmts == []):
-    #     aux = []
-    #     for i in range(n):
-    #         aux.append('-C{0:d}'.format(i))
-    #     fmts = aux
-
-    # fmts_is_single = not isinstance(fmts, (list, tuple, np.ndarray))
-    # labels_is_single = not isinstance(labels, (list, tuple, np.ndarray))        
-
-
 def plot_xy(x, y, fmts='', labels='', xlabel='', ylabel='', title='', 
                  xlim=[], ylim=[], minorticks=1, grid_major=1, grid_minor=0,
-                 xticks=[], yticks=[],
-                 figsize=(4.5, 3.0), adjust=[0.15, 0.15, 0.97, 0.97], 
+                 xticks=[], yticks=[], figsize=(4.5, 3.0), 
+                 left=0.15, bottom=0.15, right=0.97, top=0.97, 
                  legend_loc='best', xscale='linear', yscale='linear',
                  savepath='', savedpi=300, showplot=1):
     
@@ -767,17 +645,17 @@ def plot_xy(x, y, fmts='', labels='', xlabel='', ylabel='', title='',
     fig, ax = plot_xy_list(x=[x], y=[y], labels=labels, fmts=fmts, 
                            xlabel=xlabel, ylabel=ylabel, title=title, 
                            xlim=xlim, ylim=ylim, minorticks=minorticks,
-                           xticks=xticks, yticks=yticks,
+                           xticks=xticks, yticks=yticks, legend_loc=legend_loc,
                            grid_major=grid_major, grid_minor=grid_minor,
-                           figsize=figsize, adjust=adjust, legend_loc=legend_loc,
-                           xscale=xscale, yscale=yscale, 
+                           figsize=figsize, left=left, right=right,
+                           bottom=bottom, top=top, xscale=xscale, yscale=yscale, 
                            savepath=savepath, savedpi=savedpi, showplot=showplot)
 
 
 def plot_xy_list(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='', 
                  xlim=[], ylim=[], minorticks=1, grid_major=1, grid_minor=0,
-                 xticks=[], yticks=[],
-                 figsize=(4.5, 3.0), adjust=[0.15, 0.15, 0.97, 0.97], 
+                 xticks=[], yticks=[], figsize=(4.5, 3.0), 
+                 left=0.15, bottom=0.15, right=0.97, top=0.97,
                  legend_loc='best', xscale='linear', yscale='linear',
                  savepath='', savedpi=300, showplot=1):
 
@@ -799,7 +677,7 @@ def plot_xy_list(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='',
         fmts = aux
 
     fig, ax = plt.subplots(figsize=figsize)
-    plt.subplots_adjust(*adjust)
+    plt.subplots_adjust(left, bottom, right, top)
     
     for i in range(n):        
         plt.plot(x[i], y[i], fmts[i], label=labels[i])
