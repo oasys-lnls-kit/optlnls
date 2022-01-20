@@ -16,6 +16,99 @@ import numpy as np
 
 # Functions:
 
+def calcTemperatureFactor(temperature, crystal='Si', debyeTemperature=644.92, 
+                          millerIndex=[1,1,1], atomicMass=28.09,
+                          dSpacing=3.1354162886330583):
+    
+    """
+    Calculates the (Debye) temperature factor for single crystals.
+    
+    Parameters
+    ----------
+    temperature : float 
+        Crystal temperature in Kelvin (positive number).
+    crystal : str 
+        Crystal single-element symbol (e.g. Si, Ge, ...).   
+    debyeTemperature : float 
+        Debye temperature of the crystal material in Kelvin.    
+    millerIndex : array-like (1D), optional
+        Miller indexes of the crystal orientation. For use with xraylib only.
+    atomicMass : float, optional. 
+        Atomic mass of the crystal element (amu unit). if atomicMass == 0, get from xraylib.
+    dSpacing : float, optional. 
+        dSpacing in Angstroms, given the crystal and millerIndex . if dSpacing == 0, get from xraylib.
+        
+    Returns:
+    --------
+    temperatureFactor : float
+    
+    Examples:
+    ---------
+        ### using xraylib:
+            
+        >>> calcTemperatureFactor(80, crystal='Si', millerIndex=[3,1,1], debyeTemperature=644.92, dSpacing=0, atomicMass=0)
+        0.983851994268226
+        
+        
+        ### forcing it to use given dSpacing and atomicMass:
+        
+        >>> calcTemperatureFactor(80, crystal='Si', millerIndex=[1,1,1], debyeTemperature=644.92, atomicMass=28.09, dSpacing=3.1354163)
+        0.9955698950510736
+    
+    References:
+    -----------
+    
+    [1]: A. Freund, Nucl. Instrum. and Meth. 213 (1983) 495-501
+    
+    [2]: M. Sanchez del Rio and R. J. Dejus, "Status of XOP: an x-ray optics software toolkit", 
+         SPIE proc. vol. 5536 (2004) pp.171-174
+        
+
+    """
+    
+    def debyeFunc(x):
+        return x / (np.exp(-x) - 1)
+        
+    def debyePhi(y):
+        from scipy.integrate import quad
+        integral = quad(lambda x: debyeFunc(x), 0, y)[0]
+        return (1/y) * integral
+    
+    planck = 6.62607015e-34 # codata.Planck
+    Kb = 1.380649e-23 # codata.Boltzmann
+    atomicMassTokg = 1.6605390666e-27 # codata.atomic_mass
+    
+    try:        
+        import xraylib
+        h, k, l = millerIndex
+        crystalDict = xraylib.Crystal_GetCrystal(crystal)
+        if(dSpacing == 0):
+            dSpacing = xraylib.Crystal_dSpacing(crystalDict, h, k, l)
+        if(atomicMass == 0):
+            atomicMass = xraylib.AtomicWeight(xraylib.SymbolToAtomicNumber(crystal))
+        
+    except:        
+        print("xraylib not available. Please give dSpacing and atomicMass manually.")
+    
+    atomicMass *= atomicMassTokg # converting to [kg]
+    dSpacing *= 1e-10 # converting to [m]
+    
+    x = debyeTemperature / (-1*temperature) # invert temperature sign (!!!)
+    
+    B0 = (3 * planck**2) / (2 * Kb * debyeTemperature * atomicMass) 
+    
+    BT = 4 * B0 * debyePhi(x) / x
+    
+    ratio = 1 / (2 * dSpacing)
+    
+    M = (B0 + BT) * ratio**2
+    
+    temperatureFactor = np.exp(-M)
+
+    return temperatureFactor
+    
+
+
 def calc_Bragg_angle(crystal='Si', energy=8, h=1, k=1, l=1, corrected=False):
     
     '''

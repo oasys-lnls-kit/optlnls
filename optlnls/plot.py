@@ -625,11 +625,11 @@ def set_ticks_size(fontsize):
 
 
 def plot_xy(x, y, fmts='', labels='', xlabel='', ylabel='', title='', 
-                 xlim=[], ylim=[], minorticks=1, grid_major=1, grid_minor=0,
-                 xticks=[], yticks=[], figsize=(4.5, 3.0), 
-                 left=0.15, bottom=0.15, right=0.97, top=0.97, 
-                 legend_loc='best', xscale='linear', yscale='linear',
-                 savepath='', savedpi=300, showplot=1):
+            xlim=[], ylim=[], minorticks=1, grid_major=1, grid_minor=0,
+            xticks=[], yticks=[], figsize=(4.5, 3.0), 
+            left=0.15, bottom=0.15, right=0.97, top=0.97, 
+            legend_loc='best', xscale='linear', yscale='linear',
+            savepath='', savedpi=300, showplot=1):
     
     if(labels == ''):
         labels = []
@@ -715,7 +715,6 @@ def plot_xy_list(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='',
     if(yscale in ['log', 'logarithm']):
         plt.yscale('log')
         
-
     if(savepath != ''):
         plt.savefig(savepath, dpi=savedpi)
         
