@@ -89,6 +89,8 @@ def calcTemperatureFactor(temperature, crystal='Si', debyeTemperature=644.92,
         
     except:        
         print("xraylib not available. Please give dSpacing and atomicMass manually.")
+        if((dSpacing == 0) or (atomicMass == 0)):
+            return np.nan
     
     atomicMass *= atomicMassTokg # converting to [kg]
     dSpacing *= 1e-10 # converting to [m]
