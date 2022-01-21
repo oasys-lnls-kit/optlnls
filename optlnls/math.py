@@ -130,7 +130,19 @@ def angle_between(a, b):
     return np.arccos( np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)) )
 
 
-
+def weighted_avg_and_std(values, weights):
+        """
+        By EOL - stackoverflow - 10/03/2010
+        Return the weighted average and standard deviation.
+        values, weights -- Numpy ndarrays with the same shape.
+        """
+        try:
+            average = np.average(values, weights=weights)
+            variance = np.average((values-average)**2, weights=weights)  # Fast and numerically precise
+            return (average, np.sqrt(variance))
+        except:
+            print('   Mean and RMS values could not be calculated.')
+            return (np.nan, np.nan)
 
 def get_fwhm(x, y, oversampling=1, zero_padding=True, avg_correction=False, 
              inmost_outmost=0, threshold=0.5, npoints=5):
