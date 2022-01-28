@@ -117,12 +117,11 @@ def SRW_figure_error(file_name, unit_factor, angle_in, angle_out, orientation_x_
         return srwl_opt_setup_surf_height_2d(height2D, orientation_x_or_y, angle_in, angle_out)
     
     
-def analyze_height_error(filelist, unit_factor, workingFolder=''):
+def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder=''):
     
     import os
-    from optlnls.math import derivate, psd, linear_function
+    from optlnls.math import derivate_keeping_size, psd 
     from optlnls.plot import set_ticks_size
-    from scipy.optimize import curve_fit
     
     
     # === CREATES SUBFOLDERS === #
@@ -157,7 +156,7 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
         # MERIDIONAL
         #==================================================#    
         mer_cut = new_mtx[int(np.ceil((len(new_mtx)-1)/2)+1),1:]
-        mer_cut_slope = derivate(X, mer_cut)
+        mer_cut_slope = derivate_keeping_size(X, mer_cut)
         PV_mer_cut = (np.max(mer_cut)-np.min(mer_cut))*1e9
         std_height = np.std(mer_cut)*1e9
         std_slope = np.std(mer_cut_slope)*1e6 
@@ -180,7 +179,7 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
         # SAGITTAL
         #==================================================#    
         sag_cut = new_mtx[1:,int(np.ceil((len(new_mtx[0,:])-1)/2)+1)]
-        sag_cut_slope = derivate(new_mtx[1:,0], sag_cut)
+        sag_cut_slope = derivate_keeping_size(new_mtx[1:,0], sag_cut)
         PV_sag_cut = (np.max(sag_cut)-np.min(sag_cut))*1e9
         std_height_sag = np.std(sag_cut)*1e9
         std_slope_sag = np.std(sag_cut_slope)*1e6
@@ -223,7 +222,8 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
     #    plt.ylim(-2.0,2.0)
         plt.grid(True)
         plt.text(0.95,0.95,"RMS = {0:.3f} ".format(std_slope)+r'$\mu rad$', verticalalignment="top", horizontalalignment="right", transform=plt.gca().transAxes)
-        set_ticks_size(fsize)        
+        set_ticks_size(fsize)   
+        #plt.show()
         
         plt.savefig(os.path.join(os.getcwd(), 'meridional', filename.split('.')[0]+'_mer.png'), dpi=300)
         
@@ -253,6 +253,7 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
         plt.grid(True)
         plt.text(0.95,0.95,"RMS = {0:.3f} ".format(std_slope_sag)+r'$\mu rad$', verticalalignment="top", horizontalalignment="right", transform=plt.gca().transAxes)
         set_ticks_size(fsize)
+        #plt.show()
         
         plt.savefig(os.path.join(os.getcwd(), 'sagittal', filename.split('.')[0]+'_sag.png'), dpi=300)
         
@@ -273,14 +274,20 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
         plt.xlabel('Length [mm]', fontsize=fsize)
         plt.ylabel('Width [mm]', fontsize=fsize)
         set_ticks_size(fsize)
+        #plt.show()
+        
         plt.savefig(os.path.join(os.getcwd(), '2D', filename.split('.')[0]+'_2D.png'), dpi = 200)
         
         #==================================================#
         # PLOTS PSD 
         #==================================================#        
-        popt, pcov = curve_fit(linear_function, np.log10(frequencies[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]), np.log10(PSD[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]), maxfev=10000)        
+        #popt, pcov = curve_fit(linear_function, np.log10(frequencies[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]), np.log10(PSD[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]), maxfev=10000)        
+        popt = np.polyfit(np.log10(frequencies[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]), 
+                          np.log10(PSD[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]),1)        
         x = frequencies[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]
-        y = linear_function(np.log10(x), popt[0], popt[1])
+        #y = linear_function(np.log10(x), popt[0], popt[1])
+        y = np.polyval(popt, 
+                       np.log10(frequencies[int(len(frequencies)*0.05): int(len(frequencies)*0.9)]))
         plt.figure()
         plt.loglog(frequencies, PSD)
         plt.loglog(x, 10**y, '-k')
@@ -292,17 +299,21 @@ def analyze_height_error(filelist, unit_factor, workingFolder=''):
         set_ticks_size(fsize)
         plt.savefig(os.path.join(os.getcwd(), 'PSD', filename.split('.')[0]+'_PSD.png'), dpi=200)
 
-        plt.close('all')            
-        # plt.show()
+        if (plotting):        
+            plt.show()
+            
+        else:
+            plt.close('all')            
+        
 
 def calc_errors(axis, heights, coordinate_value=0):
     
-    from optlnls.math import derivate
+    from optlnls.math import derivate_keeping_size
     
     PV_cut = (np.max(heights)-np.min(heights))
     std_cut = np.std(heights)
     mean_heights = (np.max(heights)+np.min(heights))/2.0
-    cut_slope = derivate(axis, heights)
+    cut_slope = derivate_keeping_size(axis, heights)
     std_slope = np.std(cut_slope)
     return [coordinate_value, PV_cut, std_cut, mean_heights, std_slope]
 
