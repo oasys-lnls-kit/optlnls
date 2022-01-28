@@ -283,7 +283,8 @@ def append_dataset_hdf5(filename, data, z, zOffset, nz, tag, t0, ndigits):
         if (tag == nz - 1):
             f.attrs['end time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, print_minimum=False):
+def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, 
+                 print_minimum=False, cmap='viridis', figprefix=''):
     
     with h5py.File(filename, 'r+') as f:
     
@@ -360,7 +361,13 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, pri
                                    center[:,1][np.abs(z_points-fwhm_shadow_min_z[1]).argmin()]])
  
     
-    outdict = {'zStart': zStart,
+    outdict = {'xStart': xStart,
+               'xFin': xFin,
+               'nx': nx,
+               'yStart': yStart,
+               'yFin': yFin,
+               'ny': ny,
+               'zStart': zStart,
                'zFin': zFin,
                'nz': nz,
                'center_h_array': center[:,0], 
@@ -390,9 +397,8 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, pri
                'center_fwhm_h': center_fwhm[0],
                'center_fwhm_v': center_fwhm[1],
                'center_fwhm_shadow_h': center_fwhm_shadow[0],
-               'center_fwhm_shadow_v': center_fwhm_shadow[1]}#,
-               #'histoHZ': histoH,
-               #'histoVZ': histoV}
+               'center_fwhm_shadow_v': center_fwhm_shadow[1],
+               }
     
     if(write_attributes):
         with h5py.File(filename, 'a') as f:
@@ -420,8 +426,8 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, pri
         plt.title('fwhm')
         plt.plot(z_points, fwhm[:,0], label='fwhm_h')
         plt.plot(z_points, fwhm[:,1], label='fwhm_v')
-        plt.plot(z_points, fwhm_shadow[:,0], label='fwhm_h_shadow')
-        plt.plot(z_points, fwhm_shadow[:,1], label='fwhm_v_shadow')
+        # plt.plot(z_points, fwhm_shadow[:,0], label='fwhm_h_shadow')
+        # plt.plot(z_points, fwhm_shadow[:,1], label='fwhm_v_shadow')
         plt.legend()
         plt.minorticks_on()
         plt.grid(which='both', alpha=0.2)    
@@ -429,7 +435,7 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, pri
         plt.figure()
         plt.title('center')
         plt.plot(z_points, center[:,0], label='center_h')
-        plt.plot(z_points, center_shadow[:,0], label='center_h_shadow')
+        # plt.plot(z_points, center_shadow[:,0], label='center_h_shadow')
         plt.legend()
         plt.minorticks_on()
         plt.grid(which='both', alpha=0.2)    
@@ -437,7 +443,7 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, pri
         plt.figure()
         plt.title('center')
         plt.plot(z_points, center[:,1], label='center_v')
-        plt.plot(z_points, center_shadow[:,1], label='center_v_shadow')
+        # plt.plot(z_points, center_shadow[:,1], label='center_v_shadow')
         plt.legend()
         plt.minorticks_on()
         plt.grid(which='both', alpha=0.2)    
@@ -446,42 +452,94 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False, pri
         
     if(plot2D):
         
-        plt.figure()
-        plt.title('XZ')
-        plt.imshow(histoH, extent=[zStart, zFin, xStart, xFin], origin='lower', aspect='auto')
-        plt.xlabel('Z')
-        plt.ylabel('Horizontal')
-
-        plt.figure()
-        plt.title('YZ')
-        plt.imshow(histoV, extent=[zStart, zFin, yStart, yFin], origin='lower', aspect='auto')
-        plt.xlabel('Z')
-        plt.ylabel('Vertical')
+        extHZ = [zStart, zFin, xStart, xFin]
+        extVZ = [zStart, zFin, yStart, yFin]
         
-    if(plot2D == 'log'):
+        plt.figure(figsize=(6,2))
+        plt.subplots_adjust(0.13, 0.22, 0.97, 0.95)
+        # plt.title('XZ')
+        plt.imshow(histoH, extent=extHZ, origin='lower', aspect='auto', cmap=cmap)
+        plt.xlabel('Z [mm]')
+        plt.ylabel('Horizontal [mm]')
+        plt.minorticks_on()
+        plt.tick_params(which='both', axis='both', top=True, right=True)
+        if(figprefix != ''):
+            plt.savefig(figprefix + '_XZ.png', dpi=300)
+    
+        plt.figure(figsize=(6,2))
+        plt.subplots_adjust(0.13, 0.22, 0.97, 0.95)    
+        # plt.title('YZ')
+        plt.imshow(histoV, extent=extVZ, origin='lower', aspect='auto', cmap=cmap)
+        plt.xlabel('Z [mm]')
+        plt.ylabel('Vertical [mm]')
+        plt.minorticks_on()
+        plt.tick_params(which='both', axis='both', top=True, right=True)
+        if(figprefix != ''):
+            plt.savefig(figprefix + '_YZ.png', dpi=300)
         
-        xc_min_except_0 = np.min(histoH[histoH>0])
-        histoH[histoH<=0.0] = xc_min_except_0/2.0
+    # if(plot2D == 'log'):
         
-        plt.figure()
-        plt.title('XZ')
-        plt.imshow(histoH, extent=[zStart, zFin, xStart, xFin], origin='lower', aspect='auto',
-                   norm=LogNorm(vmin=xc_min_except_0/2.0, vmax=np.max(histoH)))
-        plt.xlabel('Z')
-        plt.ylabel('Horizontal')
+    #     xc_min_except_0 = np.min(histoH[histoH>0])
+    #     histoH[histoH<=0.0] = xc_min_except_0/2.0
+        
+    #     plt.figure()
+    #     plt.title('XZ')
+    #     plt.imshow(histoH, extent=[zStart, zFin, xStart, xFin], origin='lower', aspect='auto',
+    #                norm=LogNorm(vmin=xc_min_except_0/2.0, vmax=np.max(histoH)))
+    #     plt.xlabel('Z')
+    #     plt.ylabel('Horizontal')
 
-        yc_min_except_0 = np.min(histoV[histoV>0])
-        histoV[histoV<=0.0] = yc_min_except_0/2.0
+    #     yc_min_except_0 = np.min(histoV[histoV>0])
+    #     histoV[histoV<=0.0] = yc_min_except_0/2.0
 
-        plt.figure()
-        plt.title('YZ')
-        plt.imshow(histoV, extent=[zStart, zFin, yStart, yFin], origin='lower', aspect='auto',
-                   norm=LogNorm(vmin=xc_min_except_0/2.0, vmax=np.max(histoV)))
-        plt.xlabel('Z')
-        plt.ylabel('Vertical')
+    #     plt.figure()
+    #     plt.title('YZ')
+    #     plt.imshow(histoV, extent=[zStart, zFin, yStart, yFin], origin='lower', aspect='auto',
+    #                norm=LogNorm(vmin=xc_min_except_0/2.0, vmax=np.max(histoV)))
+    #     plt.xlabel('Z')
+    #     plt.ylabel('Vertical')
     
     
-    return outdict
+    return histoH, histoV, outdict
+
+
+def plot_caustic(caustic, caustic_dict, figprefix='', cmap='viridis'):
+    
+    c = caustic_dict
+    
+    histoHZ = c['histoHZ']
+    extHZ = [c['zStart'], c['zFin'], c['xStart'], c['xFin']]
+        
+    histoVZ = c['histoVZ']
+    extVZ = [c['zStart'], c['zFin'], c['yStart'], c['yFin']]
+    
+
+    plt.figure(figsize=(6,2))
+    plt.subplots_adjust(0.13, 0.15, 0.97, 0.93)
+    # plt.title('XZ')
+    plt.imshow(histoHZ, extent=extHZ, origin='lower', aspect='auto', cmap=cmap)
+    plt.xlabel('Z')
+    plt.ylabel('Horizontal')
+    plt.minorticks_on()
+    plt.tick_params(top=True, right=True)
+    if(figprefix != ''):
+        plt.savefig(figprefix + '_XZ.png', dpi=300)
+
+    plt.figure(figsize=(6,2))
+    plt.subplots_adjust(0.13, 0.15, 0.97, 0.93)    
+    # plt.title('YZ')
+    plt.imshow(histoVZ, extent=extVZ, origin='lower', aspect='auto', cmap=cmap)
+    plt.xlabel('Z')
+    plt.ylabel('Vertical')
+    plt.minorticks_on()
+    plt.tick_params(top=True, right=True)
+    if(figprefix != ''):
+        plt.savefig(figprefix + '_YZ.png', dpi=300)
+
+
+        
+    
+    
             
 def run_shadow_caustic(filename, beam, zStart, zFin, nz, zOffset, colh, colv, colref, nbinsh, nbinsv, xrange, yrange):
 
