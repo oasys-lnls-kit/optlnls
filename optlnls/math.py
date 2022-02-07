@@ -144,6 +144,10 @@ def weighted_avg_and_std(values, weights):
             print('   Mean and RMS values could not be calculated.')
             return (np.nan, np.nan)
 
+def interpolate(x_data, y_data, x_new, kind='linear'):
+    y_interp = interp1d(x_data, y_data, kind)
+    return y_interp(x_new)
+
 def get_fwhm(x, y, oversampling=1, zero_padding=True, avg_correction=False, 
              inmost_outmost=0, threshold=0.5, npoints=5):
     
