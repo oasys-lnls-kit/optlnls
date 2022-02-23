@@ -400,6 +400,28 @@ def undulator_phase_to_B(phase, phase_offset, period, B_peak):
 
 
 
+def get_harm_change_index(e1, b1, e2, b2):
+
+    kib = len(e1) # in case the harmonics don't cross
+    
+    if(np.max(e1) > np.min(e2)):
+
+        i1 = np.argwhere(e1 > np.min(e2))[0,0] # start point
+
+        kib = -1 # max index that we are searching
+        while(kib < 0):
+
+            i2 = np.argwhere(e2 <= e1[i1])[:,0] # points from e2 before e1
+
+            # iterate over e2 points comparing brilliance
+            for j2 in i2:
+                if(b2[j2] > b1[i1]):
+                    kib = i1 + 1
+                    break
+            i1 += 1
+    
+    return kib
+
 if __name__ == '__main__':
     
     print(undulator_E_to_phase(energy=14353, harmonic=5, period=0.022, E_GeV=2.955, B_max=0.7064, z0=-0.3165))
