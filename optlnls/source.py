@@ -44,7 +44,7 @@ def get_k(Period, what_harmonic, Energy, k_ext):
     return har, k, B
 
 
-def und_source(emmitance, Beta, e_spread, und_length, und_period, ph_energy, harmonic):
+def und_source(emmitance, beta, e_spread, und_length, und_period, ph_energy, harmonic):
 #    import scipy.special as spc
     
     emmitance = emmitance*1e12          #Vertical Emmitance [pm.rad]
@@ -54,11 +54,11 @@ def und_source(emmitance, Beta, e_spread, und_length, und_period, ph_energy, har
     x = 2*np.pi*harmonic*und_length/und_period*e_spread
     a1 = np.sqrt(2*np.pi)*x*spc.erf(np.sqrt(2)*x)
     Qax = np.sqrt(2*x**2/(-1+np.exp(-2*x**2)+a1))
-    sphp_h = np.sqrt(emmitance/Beta+(12.398e7/ph_energy)/(2*und_length)*Qax**2)             #Divergence
+    sphp_h = np.sqrt(emmitance/beta+(12.398e7/ph_energy)/(2*und_length)*Qax**2)             #Divergence
     
     a1s = np.sqrt(2*np.pi)*(x/4)*spc.erf(np.sqrt(2)*(x/4))
     Qas = (np.sqrt(2*(x/4)**2/(-1+np.exp(-2*(x/4)**2)+a1s)))**(2./3.)
-    sph_h = np.sqrt(emmitance*Beta+und_length*12398/(2*(np.pi**2)*ph_energy)*(Qas)**2)      #Size
+    sph_h = np.sqrt(emmitance*beta+und_length*12398/(2*(np.pi**2)*ph_energy)*(Qas)**2)      #Size
     
     return sph_h, sphp_h
 

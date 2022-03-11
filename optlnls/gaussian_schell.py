@@ -8,8 +8,8 @@ Created on Thu Mar 10 15:29:25 2022
 
 ###### References:
 
-# [1] Coherence properties of hard x-ray synchrotron sources and x-ray free-electron lasers
-# [2] Coherence properties of focused X-ray beams at high-brilliance synchrotron sources
+# [1] A. Vartanyants and A. Singer, 2010 New J. Phys. 12 035004
+# [2] A. Vartanyants and A. Singer, 2014 J. Synchrotron Rad. 21, 5-15
 
 
 import numpy as np
@@ -119,12 +119,13 @@ if __name__ == '__main__':
     
     
     d = coherenceProperties(size, div, energy)
+    print('source properties')
     printProperties(d)
     
     z = 10.0
     
     d = propagate(z, d)
-    
+    print('beam at z = {0} m'.format(z))
     printProperties(d)
 
 
