@@ -20,9 +20,100 @@ from optlnls.source import und_source
 PLANCK = 4.135667433e-15; 
 C = 2.99792458e+8;
 
+#%% CLASS IMPLEMENTATION OF THE GAUSSIAN-SCHELL EQUATIONS
+class GSbeam(object):
+    """Ray Element"""
+    
+    def __init__(self, _energy=12000, _size_rms=20e-6, 
+                 _coh_len=10e-6, _radius=0, _z=0):
+        
+        self.energy = _energy
+        self.size_rms = _size_rms
+        self.coh_len = _coh_len
+        self.radius = _radius
+        self.z = _z
+        self.update_wavelength()
+        self.calc_coherence()
+
+    def update_wavelength(self):
+        
+        self.wavelength = PLANCK * C / self.energy
+        self.wavenumber = 2 * np.pi / self.wavelength
+        
+
+    def calc_coherence(self):
+
+        # Source Degree of Coherence (constant for propagation in free space):
+        self.q = self.coh_len / self.size_rms # -----> Eq. 34, Ref. [1]
+        # Source Normalized Degree of Coherence  (constant for propagation in free space):
+        self.coh_deg = self.q / np.sqrt( 4 + self.q**2) # -----> Eq. 35, Ref. [1]
+        ### Rayleigh length
+        delta = np.sqrt(1 / ((1/((2*self.size_rms)**2)) + (1/(self.coh_len**2)))) # -----> Eq. 18, Ref. [1]
+        self.z_eff = self.wavenumber * self.size_rms * delta # -----> Eq. 22, Ref. [1]
+        
+    def undulator_source(self, _size_rms=20e-6, _div_rms=20e-6, _energy=12000):
+
+        self.energy = _energy
+        self.update_wavelength()
+        self.z = 0
+        emittance = _size_rms * _div_rms
+        self.radius = np.infty
+        self.size_rms = _size_rms
+        
+        ### coherence length
+        self.coh_len = 2 * self.size_rms / (np.sqrt( 4*(self.wavenumber**2)*(emittance**2) - 1) ) # -----> Eq. 33, Ref. [1]
+        
+        self.calc_coherence()
+        
+    def propagate_from_source(self, distance):
+        
+        exp_fctr = (1 + (distance / self.z_eff)**2)**0.5 # -----> Eq. 20, Ref. [1]
+        self.radius = distance * (1 + (self.z_eff / distance)**2) # -----> Eq. 21, Ref. [1]
+        self.size_rms = exp_fctr * self.size_rms # -----> Eq. 24, Ref. [1]
+        self.coh_len = exp_fctr * self.coh_len # -----> Eq. 28, Ref. [1]
+        self.z = self.z + distance
+        
+        self.calc_coherence()
+        
+    def propagate_aperture(self, aperture):
+        
+        self.size_rms = np.sqrt(1 / (1/self.size_rms**2 + 1/aperture**2)) # -----> Eq. 24, Ref. [2], Size Right After Lens
+        self.calc_coherence()
+        
+    def propagate_focusing_lens(self, f):
+        
+        self.radius = 1 / (1/self.radius - 1/f)
+        
+    def propagate_to_focus(self):
+        
+        self.focus_z = - self.radius / (1 + (self.radius/self.z_eff)**2)
+        divisor = np.sqrt(1 + (self.z_eff / self.radius)**2)
+        self.size_rms = self.size_rms / divisor
+        self.coh_len = self.coh_len / divisor
+        self.radius = np.infty
+        self.calc_coherence()
+        self.z = self.z + self.focus_z
+        
+    def get_spectral_density(self, x):
+        
+        amplitude = 1 / (self.size_rms * np.sqrt(2*np.pi))
+        return amplitude * np.exp(-x**2/(2*self.size_rms**2))
+        
+        
+    def print_properties(self, _label=''):
+                
+        print('\n')
+        print(_label)
+        print('Size (sigma) [um]: \t\t\t\t %.2f' %(self.size_rms*1e6))
+        print('Transv coh length [um]: \t\t\t %.2f' %(self.coh_len*1e6))
+        print('Degree of coherence (q): \t\t\t %.3f' %(self.q))
+        print('Normalized Degree of coh: \t\t %.3f' %(self.coh_deg))
+        print('Effective length (z_eff) [m]: \t\t %.2f' %(self.z_eff))
+        print('Radius of curvature [m]: \t\t\t %.2f' %(self.radius))
+        print('\n')
 
 
-#%%
+#%% DICT IMPLEMENTATION OF THE GAUSSIAN-SCHELL EQUATIONS
 def coherenceProperties(size, div, energy):
     
     d = dict()
@@ -46,11 +137,12 @@ def coherenceProperties(size, div, energy):
     
     return d
     
-def printProperties(dictGS):
+def printProperties(dictGS, label=''):
     
     d = dictGS
     
     print('\n')
+    print(label)
     print('Size (sigma) [um]: \t\t\t\t %.2f' %(1e+6*d['size']))
     # print('Source Div (sigma) [urad]: \t\t %.2f' %(1e+6*d['div']))
     print('Transv coh length [um]: \t\t\t %.2f' %(1e+6*d['coh_len']))
@@ -103,10 +195,10 @@ def propagateLens(f, dictGS):
 if __name__ == '__main__':
 
 
-    energy = 3000.0
+    energy = 9000.0
     harmonic = 1
     
-    size, div = und_source(emmitance=250e-12, 
+    size, div = und_source(emmitance=1 * 250e-12, 
                            beta=1.5, 
                            e_spread=0.085e-2, 
                            und_length=2.4, 
@@ -117,16 +209,76 @@ if __name__ == '__main__':
     size *= 1e-6
     div *= 1e-6
     
+    #######################
+    ### GS class propagation
     
-    d = coherenceProperties(size, div, energy)
-    print('source properties')
-    printProperties(d)
+    if(1):
+        
+        beam = GSbeam()
+        beam.undulator_source(_size_rms=size,
+                              _div_rms=div,
+                              _energy=energy)
+
+        beam.print_properties(_label='AT SOURCE POSITION')
+        
+        beam.propagate_from_source(distance=57.0)
+        beam.print_properties(_label='AFTER 57 M')        
+        
+        beam.propagate_aperture(aperture=140e-6/4.55)        
+        beam.print_properties(_label='AFTER APERTURE')
+        
+
+        f = 28
+        beam.propagate_focusing_lens(f=f)
+        beam.print_properties(_label='AFTER LENS')
+        
+        beam.propagate_to_focus()
+        beam.print_properties(_label='AT FOCUS')
+        print('focus position = ', beam.focus_z)    
+        # x = np.linspace(-100, 100, 1000)*1e-6
+        # intensity = beam.get_spectral_density(x)
+        
+        # plt.figure()
+        # plt.plot(x*1e6, intensity)
     
-    z = 10.0
     
-    d = propagate(z, d)
-    print('beam at z = {0} m'.format(z))
-    printProperties(d)
+    #######################
+    ### GS dict propagation
+    
+    if(0):
+        
+        d = coherenceProperties(size, div, energy)
+        print('source properties')
+        printProperties(d)
+        
+        
+        ################################
+        ### propagating 10 m downstream
+            
+        z = 10.0
+        
+        d = propagate(z, d)
+        print('beam at z = {0} m'.format(z))
+        printProperties(d)
+    
+        ################################
+        ### including an aperture
+        
+        aperture = 100e-6
+        
+        d = propagateAperture(diameter=aperture, dictGS=d)
+        print('after aperture')
+        printProperties(d) 
+    
+    
+        ################################
+        ### including a lens
+        
+        f = 5
+        
+        d = propagateLens(f=f, dictGS=d)
+        print('after lens')
+        printProperties(d) 
 
 
 #%%
