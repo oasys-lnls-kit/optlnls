@@ -15,7 +15,8 @@ Created on Thu Mar 10 15:29:25 2022
 import numpy as np
 from matplotlib import pyplot as plt
 from optlnls.source import und_source
-
+from copy import deepcopy
+from scipy.special import erf
 
 PLANCK = 4.135667433e-15; 
 C = 2.99792458e+8;
@@ -26,13 +27,14 @@ class GSbeam(object):
     """Ray Element"""
     
     def __init__(self, _energy=12000, _size_rms=20e-6, 
-                 _coh_len=10e-6, _radius=0, _z=0):
+                 _coh_len=10e-6, _radius=0, _z=0, _intensity=1.0):
         
         self.energy = _energy
         self.size_rms = _size_rms
         self.coh_len = _coh_len
         self.radius = _radius
         self.z = _z
+        self.intensity = _intensity
         self.update_wavelength()
         self.calc_coherence()
 
@@ -78,6 +80,7 @@ class GSbeam(object):
         
     def propagate_aperture(self, aperture):
         
+        self.intensity = self.intensity * erf(aperture/self.size_rms / (2 * np.sqrt(2)))
         self.size_rms = np.sqrt(1 / (1/self.size_rms**2 + 1/aperture**2)) # -----> Eq. 24, Ref. [2], Size Right After Lens
         self.calc_coherence()
         
@@ -85,19 +88,31 @@ class GSbeam(object):
         
         self.radius = 1 / (1/self.radius - 1/f)
         
+    def get_focus_position(self):
+        
+        if(self.radius < 0):
+            zf = - self.radius / (1 + (self.radius/self.z_eff)**2)
+        else:
+            zf = 0
+        return zf
+    
     def propagate_to_focus(self):
         
-        self.focus_z = - self.radius / (1 + (self.radius/self.z_eff)**2)
         divisor = np.sqrt(1 + (self.z_eff / self.radius)**2)
         self.size_rms = self.size_rms / divisor
         self.coh_len = self.coh_len / divisor
-        self.radius = np.infty
+        focus_z = self.get_focus_position()
+        self.z = self.z + focus_z
         self.calc_coherence()
-        self.z = self.z + self.focus_z
+        self.radius = np.infty
         
-    def get_spectral_density(self, x):
+    def get_spectral_density(self, x, normalized=1):
         
-        amplitude = 1 / (self.size_rms * np.sqrt(2*np.pi))
+        if(normalized):
+            amplitude = self.intensity / (self.size_rms * np.sqrt(2*np.pi))
+        else:
+            amplitude = 1
+            
         return amplitude * np.exp(-x**2/(2*self.size_rms**2))
         
         
@@ -105,6 +120,7 @@ class GSbeam(object):
                 
         print('\n')
         print(_label)
+        print('Position [m]: \t\t\t\t\t %.2f' %(self.z))
         print('Size (sigma) [um]: \t\t\t\t %.2f' %(self.size_rms*1e6))
         print('Transv coh length [um]: \t\t\t %.2f' %(self.coh_len*1e6))
         print('Degree of coherence (q): \t\t\t %.3f' %(self.q))
@@ -113,6 +129,8 @@ class GSbeam(object):
         print('Radius of curvature [m]: \t\t\t %.2f' %(self.radius))
         print('\n')
 
+    def get_copy(self):
+        return deepcopy(self)
 
 def test_GSbeam():
     
