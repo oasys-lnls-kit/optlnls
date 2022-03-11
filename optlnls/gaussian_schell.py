@@ -21,6 +21,7 @@ PLANCK = 4.135667433e-15;
 C = 2.99792458e+8;
 
 #%% CLASS IMPLEMENTATION OF THE GAUSSIAN-SCHELL EQUATIONS
+### ** the class implementation is more up-to-date than the dict one 
 class GSbeam(object):
     """Ray Element"""
     
@@ -113,7 +114,55 @@ class GSbeam(object):
         print('\n')
 
 
+def test_GSbeam():
+    
+    energy = 9000.0
+    harmonic = 1
+    
+    size, div = und_source(emmitance=1 * 250e-12, 
+                           beta=1.5, 
+                           e_spread=0.085e-2, 
+                           und_length=2.4, 
+                           und_period=21, 
+                           ph_energy=energy, 
+                           harmonic=harmonic)
+    
+    size *= 1e-6
+    div *= 1e-6
+    
+    #######################
+    ### GS class propagation
+    
+    beam = GSbeam()
+    beam.undulator_source(_size_rms=size,
+                          _div_rms=div,
+                          _energy=energy)
+
+    beam.print_properties(_label='AT SOURCE POSITION')
+    
+    beam.propagate_from_source(distance=57.0)
+    beam.print_properties(_label='AFTER 57 M')        
+    
+    beam.propagate_aperture(aperture=140e-6/4.55)        
+    beam.print_properties(_label='AFTER APERTURE')
+    
+
+    f = 28
+    beam.propagate_focusing_lens(f=f)
+    beam.print_properties(_label='AFTER LENS')
+    
+    beam.propagate_to_focus()
+    beam.print_properties(_label='AT FOCUS')
+    print('focus position = ', beam.focus_z)    
+
+    x = np.linspace(-100, 100, 1000)*1e-6
+    intensity = beam.get_spectral_density(x)
+    
+    plt.figure()
+    plt.plot(x*1e6, intensity)
+
 #%% DICT IMPLEMENTATION OF THE GAUSSIAN-SCHELL EQUATIONS
+### ** the dict implementation is deprecated. The GSbeam class is recommended. 
 def coherenceProperties(size, div, energy):
     
     d = dict()
@@ -188,13 +237,8 @@ def propagateLens(f, dictGS):
     dictGS['radius'] =  1 / (1/dictGS['radius'] - 1/f)
     return dictGS
 
-
-
-#%%
-
-if __name__ == '__main__':
-
-
+def test_GSdict():
+    
     energy = 9000.0
     harmonic = 1
     
@@ -209,91 +253,41 @@ if __name__ == '__main__':
     size *= 1e-6
     div *= 1e-6
     
-    #######################
-    ### GS class propagation
+    d = coherenceProperties(size, div, energy)
+    print('source properties')
+    printProperties(d)
     
-    if(1):
+    
+    ################################
+    ### propagating 10 m downstream
         
-        beam = GSbeam()
-        beam.undulator_source(_size_rms=size,
-                              _div_rms=div,
-                              _energy=energy)
+    z = 10.0
+    
+    d = propagate(z, d)
+    print('beam at z = {0} m'.format(z))
+    printProperties(d)
 
-        beam.print_properties(_label='AT SOURCE POSITION')
-        
-        beam.propagate_from_source(distance=57.0)
-        beam.print_properties(_label='AFTER 57 M')        
-        
-        beam.propagate_aperture(aperture=140e-6/4.55)        
-        beam.print_properties(_label='AFTER APERTURE')
-        
+    ################################
+    ### including an aperture
+    
+    aperture = 100e-6
+    
+    d = propagateAperture(diameter=aperture, dictGS=d)
+    print('after aperture')
+    printProperties(d) 
 
-        f = 28
-        beam.propagate_focusing_lens(f=f)
-        beam.print_properties(_label='AFTER LENS')
-        
-        beam.propagate_to_focus()
-        beam.print_properties(_label='AT FOCUS')
-        print('focus position = ', beam.focus_z)    
-        # x = np.linspace(-100, 100, 1000)*1e-6
-        # intensity = beam.get_spectral_density(x)
-        
-        # plt.figure()
-        # plt.plot(x*1e6, intensity)
+
+    ################################
+    ### including a lens
     
+    f = 5
     
-    #######################
-    ### GS dict propagation
-    
-    if(0):
-        
-        d = coherenceProperties(size, div, energy)
-        print('source properties')
-        printProperties(d)
-        
-        
-        ################################
-        ### propagating 10 m downstream
-            
-        z = 10.0
-        
-        d = propagate(z, d)
-        print('beam at z = {0} m'.format(z))
-        printProperties(d)
-    
-        ################################
-        ### including an aperture
-        
-        aperture = 100e-6
-        
-        d = propagateAperture(diameter=aperture, dictGS=d)
-        print('after aperture')
-        printProperties(d) 
-    
-    
-        ################################
-        ### including a lens
-        
-        f = 5
-        
-        d = propagateLens(f=f, dictGS=d)
-        print('after lens')
-        printProperties(d) 
+    d = propagateLens(f=f, dictGS=d)
+    print('after lens')
+    printProperties(d) 
 
 
 #%%
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+# if __name__ == '__main__':
 
