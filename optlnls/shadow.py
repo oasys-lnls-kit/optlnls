@@ -239,7 +239,7 @@ def initialize_hdf5(h5_filename, zStart, zFin, nz, zOffset, colh, colv, colref, 
             f.attrs['offsets'] = offsets
         group = f.create_group('datasets')
 
-def append_dataset_hdf5(filename, data, z, zOffset, nz, tag, t0, ndigits):
+def append_dataset_hdf5(filename, data, z, nz, tag, t0, ndigits):
     
     mean_h, rms_h = weighted_avg_and_std(data['bin_h_center'], data['histogram_h']) 
     mean_v, rms_v = weighted_avg_and_std(data['bin_v_center'], data['histogram_v'])
@@ -250,7 +250,7 @@ def append_dataset_hdf5(filename, data, z, zOffset, nz, tag, t0, ndigits):
         dset = f['datasets'].create_dataset('step_{0:0{ndigits}d}'.format(tag, ndigits=ndigits),
                                             data=np.array(data['histogram'], dtype=np.float), 
                                             compression="gzip")
-        dset.attrs['z'] = z + zOffset
+        dset.attrs['z'] = z 
         dset.attrs['xStart'] = data['bin_h_center'].min()
         dset.attrs['xFin'] = data['bin_h_center'].max()
         dset.attrs['nx'] = data['nbins_h']
@@ -299,7 +299,7 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
         fwhm_shadow = np.zeros((len(dset_names), 2), dtype=float)
         
         ###### READ DATA #######################
-        
+        zOffset = f.attrs['zOffset']        
         zStart = f.attrs['zStart']
         zFin = f.attrs['zFin']
         nz = f.attrs['nz']
@@ -315,7 +315,7 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
         histoH = np.zeros((nx, nz))
         histoV = np.zeros((ny, nz))
         
-        z_points = np.linspace(zStart, zFin, nz)
+        z_points = np.linspace(zStart, zFin, nz) + zOffset
         
         for i, dset in enumerate(dset_names):
             #dset_keys = list(f[dset].attrs.keys())
@@ -333,8 +333,8 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
             
             #if(plot2D):
             histo2D = np.array(g[dset])
-            histoH[:,i] = histo2D.sum(axis=1)
-            histoV[:,i] = histo2D.sum(axis=0)
+            histoH[:,i] = histo2D.sum(axis=0)
+            histoV[:,i] = histo2D.sum(axis=1)
                 
     #### FIND MINIMUMS AND ITS Z POSITIONS
 
@@ -370,6 +370,7 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
                'zStart': zStart,
                'zFin': zFin,
                'nz': nz,
+               'zOffset': zOffset,
                'center_h_array': center[:,0], 
                'center_v_array': center[:,1],
                'center_shadow_h_array': center_shadow[:,0], 
@@ -452,8 +453,8 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
         
     if(plot2D):
         
-        extHZ = [zStart, zFin, xStart, xFin]
-        extVZ = [zStart, zFin, yStart, yFin]
+        extHZ = [zStart+zOffset, zFin+zOffset, xStart, xFin]
+        extVZ = [zStart+zOffset, zFin+zOffset, yStart, yFin]
         
         plt.figure(figsize=(6,2))
         plt.subplots_adjust(0.13, 0.22, 0.97, 0.95)
@@ -508,10 +509,10 @@ def plot_caustic(caustic, caustic_dict, figprefix='', cmap='viridis'):
     c = caustic_dict
     
     histoHZ = c['histoHZ']
-    extHZ = [c['zStart'], c['zFin'], c['xStart'], c['xFin']]
+    extHZ = [c['zStart']+c['zOffset'], c['zFin']+c['zOffset'], c['xStart'], c['xFin']]
         
     histoVZ = c['histoVZ']
-    extVZ = [c['zStart'], c['zFin'], c['yStart'], c['yFin']]
+    extVZ = [c['zStart']+c['zOffset'], c['zFin']+c['zOffset'], c['yStart'], c['yFin']]
     
 
     plt.figure(figsize=(6,2))
@@ -546,11 +547,41 @@ def run_shadow_caustic(filename, beam, zStart, zFin, nz, zOffset, colh, colv, co
     t0 = time.time()
     good_rays = beam.nrays(nolost=1)
     initialize_hdf5(filename, zStart, zFin, nz, zOffset, colh, colv, colref, nbinsh, nbinsv, good_rays)
-    z_points = np.linspace(zStart, zFin, nz)
+    
+    z_points = np.linspace(zStart, zFin, nz) + zOffset
     for i in range(nz):        
         beam.retrace(z_points[i]);
-        histo = beam.histo2(col_h=colh, col_v=colv, nbins_h=nbinsh, nbins_v=nbinsv, nolost=1, ref=colref, xrange=xrange, yrange=yrange);
-        append_dataset_hdf5(filename, data=histo, z=z_points[i], zOffset=zOffset, nz=nz, tag=i+1, t0=t0, ndigits=len(str(nz)))
+        
+        (col_v,col_h,weights) = beam.getshcol((colv,colh,colref),nolost=1)
+        (hh,yy,xx) = np.histogram2d(col_v, col_h, bins=[nbinsv,nbinsh], range=[yrange,xrange], 
+                                    normed=False, weights=weights)
+
+        histo = dict()
+        histo['col_h'] = colh
+        histo['col_v'] = colv
+        histo['nolost'] = 1
+        histo['nbins_h'] = nbinsh
+        histo['nbins_v'] = nbinsv
+        histo['ref'] = colref
+        histo['xrange'] = xrange
+        histo['yrange'] = yrange
+        histo['bin_h_edges'] = xx
+        histo['bin_v_edges'] = yy
+        histo['bin_h_left'] = np.delete(xx,-1)
+        histo['bin_v_left'] = np.delete(yy,-1)
+        histo['bin_h_right'] = np.delete(xx,0)
+        histo['bin_v_right'] = np.delete(yy,0)
+        histo['bin_h_center'] = 0.5*(histo['bin_h_left']+histo['bin_h_right'])
+        histo['bin_v_center'] = 0.5*(histo['bin_v_left']+histo['bin_v_right'])
+        histo['histogram'] = hh
+        histo['histogram_h'] = hh.sum(axis=0)
+        histo['histogram_v'] = hh.sum(axis=1)
+        histo['intensity'] = beam.intensity(nolost=1)
+        histo['nrays'] = beam.nrays(nolost=0)
+        histo['good_rays'] = beam.nrays(nolost=1)
+        
+        # histo = beam.histo2(col_h=colh, col_v=colv, nbins_h=nbinsh, nbins_v=nbinsv, nolost=1, ref=colref, xrange=xrange, yrange=yrange);
+        append_dataset_hdf5(filename, data=histo, z=z_points[i], nz=nz, tag=i+1, t0=t0, ndigits=len(str(nz)))
     read_caustic(filename, write_attributes=True)
 
 

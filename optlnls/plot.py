@@ -36,7 +36,7 @@ def beam_integral(mtx):
     py = ((mtx[-1, 0] - mtx[1, 0]) / (len(mtx[1:,0]) - 1))
     return np.sum(mtx[1:,1:])*px*py
 
-def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, textA=0, textB=0, textC=0, textD=0, fitType=0, 
+def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, textA=0, textB=0, textC=0, textD=0, fitType=0, 
                      overSampling=200.0, fwhm_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Y', zlabel='', units=2, plot_title='', 
                      invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=1, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
@@ -327,264 +327,267 @@ def plot_beam(beam2D, plotting=True, outfilename='', outfileext='png', cut=0, te
 
     
     # =============== PLOT =============== #
-    if plotting:
-        
-        ### CREATE PLOT CANVAS
-        figure = plt.figure() #Figure()
-        #figure.patch.set_facecolor('white')
-        #plot_canvas = FigureCanvasQTAgg(figure)
-    #    image_box.layout().addWidget(plot_canvas)
-        figure.set_size_inches((6.2,5.96))
-        
-        #Parâmetros dos eixos
-        fontsize = 12
-        space = 0.02
-        LTborder = 0.04
-        RBborder = 0.15
-        X_or_Y = 0.28 
-        width_main = 1 - RBborder - LTborder - X_or_Y - space
-        
-        rect_2D = [LTborder + X_or_Y + space, RBborder, width_main, width_main] #2D
-        rect_X =  [LTborder + X_or_Y + space, RBborder + width_main + space, width_main, X_or_Y]
-        rect_Y =  [LTborder, RBborder, X_or_Y, width_main]
-        rect_T =  [LTborder, RBborder + width_main + space, X_or_Y, X_or_Y] #Text box
-        
-        #Criação dos quatro eixos
-        ax2D = figure.add_axes(rect_2D)
-        axX  = figure.add_axes(rect_X, sharex=ax2D)
-        axY  = figure.add_axes(rect_Y, sharey=ax2D)
-        axT  = figure.add_axes(rect_T)
     
-        hor_label = 'X'
-        vert_label = 'Y'
-        #plottitle='Title'
         
-        def set_ticks_size(ax, fontsize):
-            for tick in ax.xaxis.get_major_ticks():
-                tick.label.set_fontsize(fontsize)
-            for tick in ax.yaxis.get_major_ticks():
-                tick.label.set_fontsize(fontsize)
+    ### CREATE PLOT CANVAS
+    figure = plt.figure() #Figure()
+    #figure.patch.set_facecolor('white')
+    #plot_canvas = FigureCanvasQTAgg(figure)
+#    image_box.layout().addWidget(plot_canvas)
+    figure.set_size_inches((6.2,5.96))
     
-        axY.invert_xaxis() #Inverter eixos Y
+    #Parâmetros dos eixos
+    fontsize = 12
+    space = 0.02
+    LTborder = 0.04
+    RBborder = 0.15
+    X_or_Y = 0.28 
+    width_main = 1 - RBborder - LTborder - X_or_Y - space
+    
+    rect_2D = [LTborder + X_or_Y + space, RBborder, width_main, width_main] #2D
+    rect_X =  [LTborder + X_or_Y + space, RBborder + width_main + space, width_main, X_or_Y]
+    rect_Y =  [LTborder, RBborder, X_or_Y, width_main]
+    rect_T =  [LTborder, RBborder + width_main + space, X_or_Y, X_or_Y] #Text box
+    
+    #Criação dos quatro eixos
+    ax2D = figure.add_axes(rect_2D)
+    axX  = figure.add_axes(rect_X, sharex=ax2D)
+    axY  = figure.add_axes(rect_Y, sharey=ax2D)
+    axT  = figure.add_axes(rect_T)
+
+    hor_label = 'X'
+    vert_label = 'Y'
+    #plottitle='Title'
+    
+    def set_ticks_size(ax, fontsize):
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(fontsize)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(fontsize)
+
+    axY.invert_xaxis() #Inverter eixos Y
+    
+    # Adjust Ticks
+    axX.xaxis.set_major_locator(plt.MaxNLocator(5))
+    axY.xaxis.set_major_locator(plt.MaxNLocator(2))
+    axY.yaxis.set_major_locator(plt.MaxNLocator(5))
+    axX.minorticks_on()
+    axY.minorticks_on()
+    ax2D.minorticks_on()
+    
+    set_ticks_size(axX, fontsize)
+    set_ticks_size(axY, fontsize)
+    set_ticks_size(ax2D, fontsize)
         
-        # Adjust Ticks
-        axX.xaxis.set_major_locator(plt.MaxNLocator(5))
-        axY.xaxis.set_major_locator(plt.MaxNLocator(2))
-        axY.yaxis.set_major_locator(plt.MaxNLocator(5))
-        axX.minorticks_on()
-        axY.minorticks_on()
-        ax2D.minorticks_on()
+    axX.xaxis.set_tick_params(which='both', direction='in', top=True, bottom=True, labelbottom=False)
+    axX.yaxis.set_tick_params(which='both', direction='in', top=True, bottom=True, left=True, right=True, labelleft=False, labelright=True, labelsize=fontsize)
+    axX.yaxis.set_label_position("right")
+
+    axY.yaxis.set_tick_params(which='both', direction='in', left=True, right=True, labelleft=False, labelright=False)
+    axY.xaxis.set_tick_params(which='both', direction='in', top=True, bottom=True)
+
+    ax2D.yaxis.set_label_position("right")
+    ax2D.tick_params(axis='both', which='both', direction='out', left=True,top=True,right=True,bottom=True,labelleft=False,labeltop=False, labelright=True,labelbottom=True, labelsize=fontsize)#, width=1.3)
+    
+    axT.tick_params(axis='both',which='both',left=False,top=False,right=False,bottom=False,labelleft=False,labeltop=False, labelright=False,labelbottom=False)
+    
+    # if(offsetFactorX > 1):
+    #     axX.text(1.0, 1.03, 'x10$^{0}$'.format(str(expoX)), fontsize=fontsize-1, transform=axX.transAxes)
+    # if(offsetFactorZ > 1):
+    #     axY.text(0.0, -0.13, 'x10$^{0}$'.format(str(expoZ)), fontsize=fontsize-1, transform=axY.transAxes)        
+    
+    if(offsetFactorX > 1):
+        axX.text(1.0, 1.03, 'x10$^{%s}$' % str(expoX), fontsize=fontsize-1, transform=axX.transAxes)
+    if(offsetFactorZ > 1):
+        axY.text(0.0, -0.13, 'x10$^{%s}$' % str(expoZ), fontsize=fontsize-1, transform=axY.transAxes)        
+    
+
+
+    if(grid):
+        axX.grid(which='both', alpha=0.2, linewidth=0.3)
+        axY.grid(which='both', alpha=0.2, linewidth=0.3)
+    
+    # Write Labels
+    ax2D.set_xlabel(xlabel + ' [' + unitLabel + ']', fontsize=fontsize)
+    ax2D.set_ylabel(ylabel + ' [' + unitLabel + ']', fontsize=fontsize)
+
+    if ((x_cut.min() >= 0) & (z_cut.min() >= 0)):
+        if((cut == 0) & (zlabel == '')):
+            zlabel = 'ph/s/0.1%/' + unitLabel
+        elif((cut > 0) & (zlabel == '')):
+            zlabel = 'ph/s/0.1%/' + unitLabel + '$^2$'
+    	
+        axX.set_ylabel(zlabel, fontsize=fontsize)
+
+    ############## MAKE PLOTS
+    extent = [x_axis.min(), x_axis.max(), z_axis.min(), z_axis.max()]
+    
+    
+    if(np.isnan(z_range_min)):
+        vmin = xz_min
+    else:
+        vmin = z_range_min
+    
+    if(np.isnan(z_range_max)):
+        vmax = xz_max
+    else:
+        vmax = z_range_max
+    
+    if(scale==0):
+        obj = ax2D.imshow(xz, vmin=vmin, vmax=vmax, origin='lower', 
+                          aspect='auto', extent=extent, cmap=cmap) # 2D data
+
+    elif(scale==1):
+        # If there is a negative or zero number, it will be replaced by half minimum value higher than 0.
+        if(vmin <= 0.0):
+            xz_min_except_0 = np.min(xz[xz>0])
+            xz[xz<=0.0] = xz_min_except_0/2.0
+            vmin = xz_min_except_0/2.0
+
+        obj = ax2D.imshow(xz, norm=LogNorm(vmin=vmin, vmax=vmax), origin='lower', 
+                          aspect='auto', extent=extent, cmap=cmap)
+
+        axX.set_yscale('log')
+        axY.set_xscale('log')
+    
+    if(cut != 0):
+        ax2D.axvline(x=x_cut_coord, color='white', linestyle='--', linewidth=1, alpha=0.3)
+        ax2D.axhline(y=z_cut_coord, color='white', linestyle='--', linewidth=1, alpha=0.3)
+        axX.axvline(x=x_cut_coord, color='k', linestyle='--', linewidth=1,  alpha=0.2)
+        axY.axhline(y=z_cut_coord, color='k', linestyle='--', linewidth=1,  alpha=0.2)
+    
+    axX.plot(x_axis, x_cut, '-C0')
+    axY.plot(z_cut, z_axis, '-C0')
+    axX.plot([x_cut_fwhm[1], x_cut_fwhm[2]], [x_cut_fwhm[3], x_cut_fwhm[4]], '+C0', markersize=12) # FWHM marks
+    axY.plot([z_cut_fwhm[3], z_cut_fwhm[4]], [z_cut_fwhm[1], z_cut_fwhm[2]], '+C0', markersize=12) # FWHM marks
+
+    if(fitType != 0):        
         
-        set_ticks_size(axX, fontsize)
-        set_ticks_size(axY, fontsize)
-        set_ticks_size(ax2D, fontsize)
+        axX.plot(x_axis, x_cut_fit, 'C1--')
+        axY.plot(z_cut_fit, z_axis, 'C1--')
+        axX.plot([x_cut_fit_fwhm[1], x_cut_fit_fwhm[2]], [x_cut_fit_fwhm[3], x_cut_fit_fwhm[4]], '+C1', markersize=12) # FWHM marks
+        axY.plot([z_cut_fit_fwhm[3], z_cut_fit_fwhm[4]], [z_cut_fit_fwhm[1], z_cut_fit_fwhm[2]], '+C1', markersize=12) # FWHM marks
+
+    if(scale == 0):
+        if ((x_cut_min >= 0) & (z_cut_min >= 0)):
+            axX.set_ylim(0 - (x_cut_max - x_cut_min)/10, x_cut_max + (x_cut_max - x_cut_min)/10)
+            axY.set_xlim(z_cut_max + (z_cut_max - z_cut_min)/10, 0 - (z_cut_max - z_cut_min)/10)
+    
+               
+    
+    if(x_range != 0):
+        ax2D.set_xlim(x_range_min*unitFactor, x_range_max*unitFactor)
+        axX.set_xlim(x_range_min*unitFactor, x_range_max*unitFactor)
+    else:
+        ax2D.set_xlim(x_axis[0],x_axis[-1])
+    
+    if(y_range != 0):
+        ax2D.set_ylim(y_range_min*unitFactor, y_range_max*unitFactor)
+        axY.set_ylim(y_range_min*unitFactor, y_range_max*unitFactor)
+    else:
+        ax2D.set_ylim(z_axis[0],z_axis[-1])
+    
+    
             
-        axX.xaxis.set_tick_params(which='both', direction='in', top=True, bottom=True, labelbottom=False)
-        axX.yaxis.set_tick_params(which='both', direction='in', top=True, bottom=True, left=True, right=True, labelleft=False, labelright=True, labelsize=fontsize)
-        axX.yaxis.set_label_position("right")
 
-        axY.yaxis.set_tick_params(which='both', direction='in', left=True, right=True, labelleft=False, labelright=False)
-        axY.xaxis.set_tick_params(which='both', direction='in', top=True, bottom=True)
-
-        ax2D.yaxis.set_label_position("right")
-        ax2D.tick_params(axis='both', which='both', direction='out', left=True,top=True,right=True,bottom=True,labelleft=False,labeltop=False, labelright=True,labelbottom=True, labelsize=fontsize)#, width=1.3)
-        
-        axT.tick_params(axis='both',which='both',left=False,top=False,right=False,bottom=False,labelleft=False,labeltop=False, labelright=False,labelbottom=False)
-        
-        # if(offsetFactorX > 1):
-        #     axX.text(1.0, 1.03, 'x10$^{0}$'.format(str(expoX)), fontsize=fontsize-1, transform=axX.transAxes)
-        # if(offsetFactorZ > 1):
-        #     axY.text(0.0, -0.13, 'x10$^{0}$'.format(str(expoZ)), fontsize=fontsize-1, transform=axY.transAxes)        
-        
-        if(offsetFactorX > 1):
-            axX.text(1.0, 1.03, 'x10$^{%s}$' % str(expoX), fontsize=fontsize-1, transform=axX.transAxes)
-        if(offsetFactorZ > 1):
-            axY.text(0.0, -0.13, 'x10$^{%s}$' % str(expoZ), fontsize=fontsize-1, transform=axY.transAxes)        
-        
-
-
-        if(grid):
-            axX.grid(which='both', alpha=0.2, linewidth=0.3)
-            axY.grid(which='both', alpha=0.2, linewidth=0.3)
-        
-        # Write Labels
-        ax2D.set_xlabel(xlabel + ' [' + unitLabel + ']', fontsize=fontsize)
-        ax2D.set_ylabel(ylabel + ' [' + unitLabel + ']', fontsize=fontsize)
-    
-        if ((x_cut.min() >= 0) & (z_cut.min() >= 0)):
-            if((cut == 0) & (zlabel == '')):
-                zlabel = 'ph/s/0.1%/' + unitLabel
-            elif((cut > 0) & (zlabel == '')):
-                zlabel = 'ph/s/0.1%/' + unitLabel + '$^2$'
-        	
-            axX.set_ylabel(zlabel, fontsize=fontsize)
-
-        ############## MAKE PLOTS
-        extent = [x_axis.min(), x_axis.max(), z_axis.min(), z_axis.max()]
-        
-        
-        if(np.isnan(z_range_min)):
-            vmin = xz_min
-        else:
-            vmin = z_range_min
-        
-        if(np.isnan(z_range_max)):
-            vmax = xz_max
-        else:
-            vmax = z_range_max
-        
-        if(scale==0):
-            obj = ax2D.imshow(xz, vmin=vmin, vmax=vmax, origin='lower', 
-                              aspect='auto', extent=extent, cmap=cmap) # 2D data
-    
-        elif(scale==1):
-            # If there is a negative or zero number, it will be replaced by half minimum value higher than 0.
-            if(vmin <= 0.0):
-                xz_min_except_0 = np.min(xz[xz>0])
-                xz[xz<=0.0] = xz_min_except_0/2.0
-                vmin = xz_min_except_0/2.0
-
-            obj = ax2D.imshow(xz, norm=LogNorm(vmin=vmin, vmax=vmax), origin='lower', 
-                              aspect='auto', extent=extent, cmap=cmap)
-    
-            axX.set_yscale('log')
-            axY.set_xscale('log')
-        
-        if(cut != 0):
-            ax2D.axvline(x=x_cut_coord, color='white', linestyle='--', linewidth=1, alpha=0.3)
-            ax2D.axhline(y=z_cut_coord, color='white', linestyle='--', linewidth=1, alpha=0.3)
-            axX.axvline(x=x_cut_coord, color='k', linestyle='--', linewidth=1,  alpha=0.2)
-            axY.axhline(y=z_cut_coord, color='k', linestyle='--', linewidth=1,  alpha=0.2)
-        
-        axX.plot(x_axis, x_cut, '-C0')
-        axY.plot(z_cut, z_axis, '-C0')
-        axX.plot([x_cut_fwhm[1], x_cut_fwhm[2]], [x_cut_fwhm[3], x_cut_fwhm[4]], '+C0', markersize=12) # FWHM marks
-        axY.plot([z_cut_fwhm[3], z_cut_fwhm[4]], [z_cut_fwhm[1], z_cut_fwhm[2]], '+C0', markersize=12) # FWHM marks
-
-        if(fitType != 0):        
+    #TITLE
+    if(len(plot_title) <= 25):
+        text1 = plot_title
+    else:
+        text1 = plot_title[:25] + '\n' + plot_title[25:50]
             
-            axX.plot(x_axis, x_cut_fit, 'C1--')
-            axY.plot(z_cut_fit, z_axis, 'C1--')
-            axX.plot([x_cut_fit_fwhm[1], x_cut_fit_fwhm[2]], [x_cut_fit_fwhm[3], x_cut_fit_fwhm[4]], '+C1', markersize=12) # FWHM marks
-            axY.plot([z_cut_fit_fwhm[3], z_cut_fit_fwhm[4]], [z_cut_fit_fwhm[1], z_cut_fit_fwhm[2]], '+C1', markersize=12) # FWHM marks
+    # MEAN COORDINATES    
+    text2  = hor_label+' POS. MEAN = {0:.3f}\n'.format(x_mean)
+    text2 += vert_label+' POS. MEAN = {0:.3f}\n\n'.format(z_mean)
+    
+    # PEAK COORDINATES
+    text3  = hor_label+' POS. PEAK = {0:.3f}\n'.format(x_axis[zmax[0]])
+    text3 += vert_label+' POS. PEAK = {0:.3f}\n'.format(z_axis[xmax[0]])
 
-        if(scale == 0):
-            if ((x_cut_min >= 0) & (z_cut_min >= 0)):
-                axX.set_ylim(0 - (x_cut_max - x_cut_min)/10, x_cut_max + (x_cut_max - x_cut_min)/10)
-                axY.set_xlim(z_cut_max + (z_cut_max - z_cut_min)/10, 0 - (z_cut_max - z_cut_min)/10)
-        
-                   
-        
-        if(x_range != 0):
-            ax2D.set_xlim(x_range_min*unitFactor, x_range_max*unitFactor)
-            axX.set_xlim(x_range_min*unitFactor, x_range_max*unitFactor)
-        else:
-            ax2D.set_xlim(x_axis[0],x_axis[-1])
-        
-        if(y_range != 0):
-            ax2D.set_ylim(y_range_min*unitFactor, y_range_max*unitFactor)
-            axY.set_ylim(y_range_min*unitFactor, y_range_max*unitFactor)
-        else:
-            ax2D.set_ylim(z_axis[0],z_axis[-1])
-        
-        
-                
+    # DATA RANGE
+    text4  = hor_label+' RANGE = {0:.3f}\n'.format(x_axis[-1] - x_axis[0])
+    text4 += vert_label+' RANGE = {0:.3f}\n'.format(z_axis[-1] - z_axis[0])
 
-        #TITLE
-        if(len(plot_title) <= 25):
-            text1 = plot_title
-        else:
-            text1 = plot_title[:25] + '\n' + plot_title[25:50]
-                
-        # MEAN COORDINATES    
-        text2  = hor_label+' POS. MEAN = {0:.3f}\n'.format(x_mean)
-        text2 += vert_label+' POS. MEAN = {0:.3f}\n\n'.format(z_mean)
+    # CUT FWHM
+    text5  = hor_label+' FWHM = {0:.3f}\n'.format(x_cut_fwhm[0])
+    text5 += vert_label+' FWHM = {0:.3f}\n'.format(z_cut_fwhm[0])
+    
+    # CUT RMS
+    text6  = hor_label+' RMS = {0:.3f}\n'.format(x_cut_rms)
+    text6 += vert_label+' RMS = {0:.3f}\n'.format(z_cut_rms)
+    
+    # CUT MAXIMUM
+    text7  = hor_label+' PEAK = {0:.2e}\n'.format(x_cut_max*offsetFactorX)
+    text7 += vert_label+' PEAK = {0:.2e}\n'.format(z_cut_max*offsetFactorZ)
+    
+    text8 = ''; text9 = ''; text10 = ''; text11 = ''; text12 = ''; # IF FIT IS DISABLED
+    
+    text13  = 'F = {0:.2e} ph/s'.format(integral)
+    
+    if(fitType != 0):
+        
+        # MEAN COORDINATES
+        text8  = hor_label+' POS. MEAN = {0:.3f}\n'.format(np.average(x_axis, weights=x_cut_fit))
+        text8 += vert_label+' POS. MEAN = {0:.3f}\n'.format(np.average(z_axis, weights=z_cut_fit))
         
         # PEAK COORDINATES
-        text3  = hor_label+' POS. PEAK = {0:.3f}\n'.format(x_axis[zmax[0]])
-        text3 += vert_label+' POS. PEAK = {0:.3f}\n'.format(z_axis[xmax[0]])
-
-        # DATA RANGE
-        text4  = hor_label+' RANGE = {0:.3f}\n'.format(x_axis[-1] - x_axis[0])
-        text4 += vert_label+' RANGE = {0:.3f}\n'.format(z_axis[-1] - z_axis[0])
-
-        # CUT FWHM
-        text5  = hor_label+' FWHM = {0:.3f}\n'.format(x_cut_fwhm[0])
-        text5 += vert_label+' FWHM = {0:.3f}\n'.format(z_cut_fwhm[0])
+        text9  = hor_label+' POS. PEAK = {0:.3f}\n'.format(x_axis[np.abs(x_cut_fit - np.max(x_cut_fit)).argmin()])
+        text9 += vert_label+' POS. PEAK = {0:.3f}\n'.format(z_axis[np.abs(z_cut_fit - np.max(z_cut_fit)).argmin()])
         
-        # CUT RMS
-        text6  = hor_label+' RMS = {0:.3f}\n'.format(x_cut_rms)
-        text6 += vert_label+' RMS = {0:.3f}\n'.format(z_cut_rms)
+        # CUT FIT FWHM
+        text10  = hor_label+' FWHM = {0:.3f}\n'.format(x_cut_fit_fwhm[0])
+        text10 += vert_label+' FWHM = {0:.3f}\n'.format(z_cut_fit_fwhm[0])
         
-        # CUT MAXIMUM
-        text7  = hor_label+' PEAK = {0:.2e}\n'.format(x_cut_max*offsetFactorX)
-        text7 += vert_label+' PEAK = {0:.2e}\n'.format(z_cut_max*offsetFactorZ)
+        # CUT FIT RMS
+        text11  = hor_label+' RMS = {0:.3f}\n'.format(x_cut_fit_rms)
+        text11 += vert_label+' RMS = {0:.3f}\n'.format(z_cut_fit_rms)
         
-        text8 = ''; text9 = ''; text10 = ''; text11 = ''; text12 = ''; # IF FIT IS DISABLED
-        
-        text13  = 'F = {0:.2e} ph/s'.format(integral)
-        
-        if(fitType != 0):
+        # CUT FIT MAXIMUM
+        text12  = hor_label+' PEAK = {0:.2e}\n'.format(np.max(x_cut_fit*offsetFactorX))
+        text12 += vert_label+' PEAK = {0:.2e}\n'.format(np.max(z_cut_fit*offsetFactorZ))
             
-            # MEAN COORDINATES
-            text8  = hor_label+' POS. MEAN = {0:.3f}\n'.format(np.average(x_axis, weights=x_cut_fit))
-            text8 += vert_label+' POS. MEAN = {0:.3f}\n'.format(np.average(z_axis, weights=z_cut_fit))
-            
-            # PEAK COORDINATES
-            text9  = hor_label+' POS. PEAK = {0:.3f}\n'.format(x_axis[np.abs(x_cut_fit - np.max(x_cut_fit)).argmin()])
-            text9 += vert_label+' POS. PEAK = {0:.3f}\n'.format(z_axis[np.abs(z_cut_fit - np.max(z_cut_fit)).argmin()])
-            
-            # CUT FIT FWHM
-            text10  = hor_label+' FWHM = {0:.3f}\n'.format(x_cut_fit_fwhm[0])
-            text10 += vert_label+' FWHM = {0:.3f}\n'.format(z_cut_fit_fwhm[0])
-            
-            # CUT FIT RMS
-            text11  = hor_label+' RMS = {0:.3f}\n'.format(x_cut_fit_rms)
-            text11 += vert_label+' RMS = {0:.3f}\n'.format(z_cut_fit_rms)
-            
-            # CUT FIT MAXIMUM
-            text12  = hor_label+' PEAK = {0:.2e}\n'.format(np.max(x_cut_fit*offsetFactorX))
-            text12 += vert_label+' PEAK = {0:.2e}\n'.format(np.max(z_cut_fit*offsetFactorZ))
-                
-        def text(x):
-            return {
-                1 : [text1, 'black'],
-                2 : [text2, 'C0'],
-                3 : [text3, 'C0'],
-                4 : [text4, 'C0'],
-                5 : [text5, 'C0'],
-                6 : [text6, 'C0'],
-                7 : [text7, 'C0'],
-                8 : [text8, 'C1'],
-                9 : [text9, 'C1'],
-                10 : [text10, 'C1'],
-                11 : [text11, 'C1'],
-                12 : [text12, 'C1'],
-                13 : [text13, 'black'],
-            }.get(x, ['', 'k'])       
-        
-        [text_box1, color1] = text(textA)
-        [text_box2, color2] = text(textB)
-        [text_box3, color3] = text(textC)
-        [text_box4, color4] = text(textD)
-
+    def text(x):
+        return {
+            1 : [text1, 'black'],
+            2 : [text2, 'C0'],
+            3 : [text3, 'C0'],
+            4 : [text4, 'C0'],
+            5 : [text5, 'C0'],
+            6 : [text6, 'C0'],
+            7 : [text7, 'C0'],
+            8 : [text8, 'C1'],
+            9 : [text9, 'C1'],
+            10 : [text10, 'C1'],
+            11 : [text11, 'C1'],
+            12 : [text12, 'C1'],
+            13 : [text13, 'black'],
+        }.get(x, ['', 'k'])       
     
-        axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.01, text_box1, color=color1, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
-        axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.24, text_box2, color=color2, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
-        axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.47, text_box3, color=color3, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
+    [text_box1, color1] = text(textA)
+    [text_box2, color2] = text(textB)
+    [text_box3, color3] = text(textC)
+    [text_box4, color4] = text(textD)
 
-        if not show_colorbar:
-            axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.70, text_box4, color=color4, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
-        else:
-            axTi = axT.inset_axes([0.1, 0.11, 0.8, 0.06])
-            cb = plt.colorbar(obj, cax=axTi, orientation='horizontal') 
-            axTi.tick_params(axis='x', which='both', direction='out', top=True, bottom=False, labeltop=True, labelbottom=False, labelsize=9, pad=0)
-            axTi.xaxis.offsetText.set_fontsize(9)
 
-        if(outfilename != ''):
-            figure.savefig(outfilename, dpi=400, transparent=False)
+    axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.01, text_box1, color=color1, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
+    axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.24, text_box2, color=color2, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
+    axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.47, text_box3, color=color3, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
 
+    if not show_colorbar:
+        axT.text(LTborder + 0.02, RBborder + width_main + space + X_or_Y - 0.70, text_box4, color=color4, family='serif', weight='medium', horizontalalignment='left', verticalalignment='top', fontsize=9, transform= axT.transAxes)
+    else:
+        axTi = axT.inset_axes([0.1, 0.11, 0.8, 0.06])
+        cb = plt.colorbar(obj, cax=axTi, orientation='horizontal') 
+        axTi.tick_params(axis='x', which='both', direction='out', top=True, bottom=False, labeltop=True, labelbottom=False, labelsize=9, pad=0)
+        axTi.xaxis.offsetText.set_fontsize(9)
+
+    if(outfilename != ''):
+        figure.savefig(outfilename, dpi=400, transparent=False)
+
+    if(show_plot):
         plt.show()
+    else:
+        plt.close()
         		
         #########################################################################
         #### RETURN OUTPUT AS DICT
@@ -673,6 +676,8 @@ def plot_xy_list(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='',
     if(fmts == []):
         aux = []
         for i in range(n):
+            if(i>=10):
+                i = i%10
             aux.append('-C{0:d}'.format(i))
         fmts = aux
 
