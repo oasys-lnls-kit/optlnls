@@ -82,6 +82,24 @@ def calc_constant_included_angle(wavelength=200e-9, k0=75, m=1, two_theta=162, e
     return alpha, beta
     
 
+def calc_blaze_angle(alpha, beta):
+    return (alpha + beta) / 2
+
+def calc_angular_dispersion(k0, m, beta):
+    """
+    calculates the angular dispersion in units of [nm/rad]
+    provided k0 in [1/mm]
+    """
+    return np.cos(beta*np.pi/180) * 1e6 / (k0 * m)  
+
+def calc_linear_dispersion(k0, m, beta, q):
+    """
+    calculates the linear dispersion in units of [nm/mm]
+    provided k0 in [1/mm] and q in [mm]
+    """
+    return np.cos(beta*np.pi/180) * 1e6 / (k0 * m * q) 
+
+
 def TGM_optimize_radii(alpha=83.7480078, beta=78.2519922, p=1.0016, q=1.41428):
     ### equations from Peatman's book
     
