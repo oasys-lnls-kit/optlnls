@@ -7,6 +7,8 @@ from matplotlib.colors import LogNorm
 from scipy.integrate import simps
 import time
 import h5py
+import os
+import glob
 
 def calc_und_flux(beam, nbins, eBeamEnergy, eSpread, current, 
                   und_per, und_length, B, min_harmonic, max_harmonic, 
@@ -586,12 +588,33 @@ def run_shadow_caustic(filename, beam, zStart, zFin, nz, zOffset, colh, colv, co
 
 
 
-
-
-
-
-
-
+def clean_shadow_files(path, print_files=1, delete_files=1,
+                       prefixlist=['mirr', 'rmir','optax', 'effic', 
+                                   'screen', 'star', 'angle']):
+    
+    removed_files = []
+    
+    for name in prefixlist:
+        
+        files = os.path.join(path, name+'*')
+        
+        fnames = glob.glob(files)
+        
+        for fnm in fnames:         
+            
+            removed_files.append(os.path.basename(fnm))
+            if(print_files):
+                print(removed_files[-1])
+              
+            if(delete_files):
+                try:
+                    os.remove(fnm)
+                except:
+                    pass
+    
+    
+    return removed_files
+    
 
 
 
