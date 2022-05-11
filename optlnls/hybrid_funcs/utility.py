@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+########################################## DISCLAIMER ##########################################
+#                                                                                              #
+# Python functions for hybrid screen calculations for optics simulations developed in LNLS,    #
+# CNPEM, based on OASYS1 and ShadowOui and licensed under GNU GENERAL PUBLIC LICENSE.          #
+# OASYS1    : (https://github.com/oasys-kit/OASYS1)                                            #
+# ShadowOui : (https://github.com/oasys-kit/ShadowOui)                                         #
+#                                                                                              #
+# The original HYBRID code works inside OASYS environment, therefore the modifications made    #
+# were purely to automatize the functions for use in python scripts, removing widget classes   #
+# dependences.                                                                                 #
+#                                                                                              #
+################################################################################################
+
 Created on Fri May  6 10:59:06 2022
 
 @author: joao.astolfo

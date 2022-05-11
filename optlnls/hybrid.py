@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+########################################## DISCLAIMER ##########################################
+#                                                                                              #
+# Python functions for hybrid screen calculations for optics simulations developed in LNLS,    #
+# CNPEM, based on OASYS1 and ShadowOui and licensed under GNU GENERAL PUBLIC LICENSE.          #
+# OASYS1    : (https://github.com/oasys-kit/OASYS1)                                            #
+# ShadowOui : (https://github.com/oasys-kit/ShadowOui)                                         #
+#                                                                                              #
+# The original HYBRID code works inside OASYS environment, therefore the modifications made    #
+# were purely to automatize the functions for use in python scripts, removing widget classes   #
+# dependences.                                                                                 #
+#                                                                                              #
+################################################################################################
+
 Created on Fri May  6 09:20:01 2022
 
 @author: joao.astolfo
@@ -63,8 +76,6 @@ def run_hybrid(beam, units=2, diff_plane=1, calcType=2, dist_to_img_calc=0, dist
                focal_length_calc=0, focallength=25000, nf=0, nbins_x=100, nbins_z=100, npeak=10, fftnpts=1e5,
                write_file=0, automatic=1, send_original_beam=False):
     """
-    Automatization of hybrid screen calculation.
-    ----------
 
     Parameters
     ----------
