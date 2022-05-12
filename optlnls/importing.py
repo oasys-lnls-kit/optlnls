@@ -8,6 +8,7 @@ Created on Sat Mar 21 11:03:10 2020
 
 import numpy as np
 from scipy import ndimage
+import json
 
 def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbins_y=100, nolost = 1, ref = 23, zeroPadding=0, gaussian_filter=0):
     """
@@ -83,7 +84,43 @@ def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbin
     return XY
 
 
+def read_spectra_brilliance_file(filename):
+    
+    data = {}
 
+    f = open(filename)
+
+    filedata = json.load(f)
+
+    data['filename'] = filename
+    data['period'] = filedata['Input']['Light Source']['&lambda;<sub>u</sub> (mm)']
+    data['nk'] = filedata['Input']['Configurations']['Points (K)']
+    hmin = filedata['Input']['Configurations']['Harmonic Range'][0]
+    hmax = filedata['Input']['Configurations']['Harmonic Range'][1]
+
+
+    ### find harmonics contained in the file
+    harmonics = []
+    harmonics.append(hmin)
+    addHarmonic = True
+    while(addHarmonic):
+        harmonics.append(harmonics[-1] + 2)
+        if(harmonics[-1] + 2 > hmax):
+            addHarmonic = False
+            
+    data['harmonics'] = np.array(harmonics)   
+    data['nh'] = len(harmonics)
+
+    data['energy'] = np.array(filedata['Output']['data'][0][0][::-1]) 
+    data['k'] = np.array(filedata['Output']['data'][0][1][::-1])
+
+    brilliance = []
+    for j in range(data['nh']):
+        brilliance.append(filedata['Output']['data'][0][2][::-1])
+    data['brilliance'] = np.array(brilliance)    
+    
+    return data
+    
 
 def read_spectra_xyz(filename):
     """
