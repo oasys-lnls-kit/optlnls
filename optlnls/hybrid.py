@@ -21,8 +21,11 @@ Created on Fri May  6 09:20:01 2022
 import numpy as np
 import copy
 
-from hybrid_funcs.propagate import propagate_1D_x_direction, propagate_1D_z_direction, propagate_2D
-from hybrid_funcs.utility import get_delta, read_shadow_beam, sh_readsh, sh_readangle, sh_readsurface, h5_readsurface
+#from hybrid_funcs.propagate import propagate_1D_x_direction, propagate_1D_z_direction, propagate_2D
+#from hybrid_funcs.utility import get_delta, read_shadow_beam, sh_readsh, sh_readangle, sh_readsurface, h5_readsurface
+
+from optlnls.hybrid_funcs.propagate import *
+from optlnls.hybrid_funcs.utility import *
 
 from orangecontrib.shadow.widgets.special_elements.bl.hybrid_control import HybridCalculationParameters, HybridNotNecessaryWarning
 from orangecontrib.shadow.util.shadow_util import ShadowCongruence, ShadowPhysics

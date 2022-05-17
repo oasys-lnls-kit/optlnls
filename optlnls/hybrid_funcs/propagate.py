@@ -20,8 +20,10 @@ Created on Fri May  6 10:27:57 2022
 """
 import numpy
 
-from utility import hy_findrmsslopefromheight, calculate_focal_length_ff, calculate_focal_length_ff_2D
-from utility import calculate_fft_size, get_mirror_phase_shift, get_grating_phase_shift, get_crl_phase_shift
+#from utility import hy_findrmsslopefromheight, calculate_focal_length_ff, calculate_focal_length_ff_2D
+#from utility import calculate_fft_size, get_mirror_phase_shift, get_grating_phase_shift, get_crl_phase_shift
+
+from optlnls.hybrid_funcs.utility import *
 
 from srxraylib.util.data_structures import ScaledArray, ScaledMatrix
 from srxraylib.waveoptics.wavefront import Wavefront1D
