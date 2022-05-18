@@ -39,7 +39,12 @@ def get_k(Period, what_harmonic, Energy, k_ext):
                     har = h_n
                     k = K2**0.5
                     #print("Minimum Harmonic = ", har, ', K = ', k)
-                    break     
+                    break
+            elif what_harmonic == 'first':
+                # break after first solution
+                har = h_n
+                k = K2**0.5
+                break                    
     B = 2*pi*m_e*c*k/(e*Period)
     return har, k, B
 
