@@ -173,7 +173,7 @@ def calc_Darwin_width(crystal='Si', energy=8, h=1, k=1, l=1, rel_angle=1, debye_
     
     FHbar = xraylib.Crystal_F_H_StructureFactor(cryst, energy, -h, -k, -l, debye_temp_factor, rel_angle)
     
-    C = (np.cos(2*bragg))
+    C = abs(np.cos(2*bragg))
     
     dw_p = 1e10 * 2 * C * (xraylib.R_E / cryst['volume']) * (xraylib.KEV2ANGST * xraylib.KEV2ANGST/ (energy * energy)) * np.sqrt(abs(FH * FHbar)) / np.pi / np.sin(2*bragg)
     
