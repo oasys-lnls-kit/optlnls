@@ -44,8 +44,14 @@ def get_k(Period, what_harmonic, Energy, k_ext):
                 # break after first solution
                 har = h_n
                 k = K2**0.5
-                break                    
-    B = 2*pi*m_e*c*k/(e*Period)
+                break
+            
+    if(np.isnan(k)):
+        B = np.nan
+        har = np.nan
+    else:
+        B = 2*pi*m_e*c*k/(e*Period)
+                     
     return har, k, B
 
 
