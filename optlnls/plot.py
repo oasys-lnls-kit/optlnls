@@ -629,7 +629,7 @@ def set_ticks_size(fontsize):
 
 def plot_xy(x, y, fmts='', labels='', xlabel='', ylabel='', title='', 
             xlim=[], ylim=[], minorticks=1, grid_major=1, grid_minor=0,
-            xticks=[], yticks=[], figsize=(4.5, 3.0), 
+            xticks=[], yticks=[], figsize=(4.5, 3.0), alpha=0.9,
             left=0.15, bottom=0.15, right=0.97, top=0.97, 
             legend_loc='best', xscale='linear', yscale='linear',
             savepath='', savedpi=300, showplot=1):
@@ -650,14 +650,14 @@ def plot_xy(x, y, fmts='', labels='', xlabel='', ylabel='', title='',
                            xlim=xlim, ylim=ylim, minorticks=minorticks,
                            xticks=xticks, yticks=yticks, legend_loc=legend_loc,
                            grid_major=grid_major, grid_minor=grid_minor,
-                           figsize=figsize, left=left, right=right,
+                           figsize=figsize, left=left, right=right, alpha=[alpha],
                            bottom=bottom, top=top, xscale=xscale, yscale=yscale, 
                            savepath=savepath, savedpi=savedpi, showplot=showplot)
 
 
 def plot_xy_list(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='', 
                  xlim=[], ylim=[], minorticks=1, grid_major=1, grid_minor=0,
-                 xticks=[], yticks=[], figsize=(4.5, 3.0), 
+                 xticks=[], yticks=[], figsize=(4.5, 3.0), alpha=[],
                  left=0.15, bottom=0.15, right=0.97, top=0.97,
                  legend_loc='best', xscale='linear', yscale='linear',
                  savepath='', savedpi=300, showplot=1):
@@ -680,12 +680,15 @@ def plot_xy_list(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='',
                 i = i%10
             aux.append('-C{0:d}'.format(i))
         fmts = aux
+        
+    if(alpha == []):
+        alpha = [0.9]*n
 
     fig, ax = plt.subplots(figsize=figsize)
     plt.subplots_adjust(left, bottom, right, top)
     
     for i in range(n):        
-        plt.plot(x[i], y[i], fmts[i], label=labels[i])
+        plt.plot(x[i], y[i], fmts[i], label=labels[i], alpha=alpha[i])
     
     plt.minorticks_on()
     plt.xlabel(xlabel)
