@@ -117,14 +117,14 @@ def calc_und_flux(beam, nbins, eBeamEnergy, eSpread, current,
 def calc_wiggler_flux(beam, E, I, B, N_periods, hor_acc_mrad, nbins, 
                       vert_acc_mrad=0, e_beam_vert_div=1e-6, show_plots=0, verbose=0):
     
-    BM_flux = calc_BM_flux(beam, E, I, B, hor_acc_mrad, 
+    WG_flux = calc_BM_flux(beam, E, I, B, hor_acc_mrad, 
                         nbins, vert_acc_mrad, e_beam_vert_div)
-    BM_flux['total flux at source'] = BM_flux['total flux at source'] * (2*N_periods)
-    BM_flux['total flux propagated'] = BM_flux['total flux propagated'] * (2*N_periods)
-    BM_flux['total power at source'] = np.nan
-    BM_flux['total power propagated'] = np.nan
+    WG_flux['total flux at source'] = WG_flux['total flux at source'] * (2*N_periods)
+    WG_flux['total flux propagated'] = WG_flux['total flux propagated'] * (2*N_periods)
+    WG_flux['total power at source'] = np.nan
+    WG_flux['total power propagated'] = np.nan
     
-    return BM_flux
+    return WG_flux
 
 
 def calc_BM_flux(beam, E, I, B, hor_acc_mrad, nbins, 
