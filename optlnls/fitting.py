@@ -172,6 +172,32 @@ def pseudo_voigt_asymmetric(x, x0, a, sigma, alpha, beta, m):
     pseudov_asymmetric *= a / np.max(pseudov_asymmetric)
     return pseudov_asymmetric
 
+
+def calc_rsquared(y, yfit):
+    """
+    Parameters
+    ----------
+    y : float, array
+        y data points.
+    yfit : float, array
+        y fitted points in the same x-coordinates.
+
+    Returns
+    -------
+    r_squared : float
+        R^2 - the fitting quality parameter.
+    """
+
+    residuals = y - yfit
+    ss_res = np.sum(residuals**2)
+    ss_tot = np.sum((y- np.mean(y))**2)
+    r_squared = 1 - (ss_res / ss_tot)
+    
+    return r_squared
+
+
+
+
 if __name__ == '__main__':
     
     x = np.linspace(-6, 6, 100)
