@@ -72,6 +72,48 @@ def fit_lorentz_gauss(x, y, p0=[0]*5, maxfev=20000, autoguess=1, filtered=0, win
     perr = np.sqrt(np.diag(pcov))
     return popt, perr
 
+
+def fit_cauchy_gauss(x, y, p0=[0]*5, maxfev=20000, autoguess=1, filtered=0, window_length=11, poly_order=5):
+
+    if(autoguess):
+        mean, peak, fwhm = fit_autoguess(x, y, filtered, window_length, poly_order)
+        p0 = [mean, peak, fwhm/2, peak, fwhm/2]    
+
+    try:
+        popt, pcov = curve_fit(cauchy_gauss_function, x, y, p0=p0, maxfev=maxfev)
+        
+    except ValueError:
+        popt, pcov = [0]*3, [0]*3        
+        print("Could not fit data\n") 
+    except RuntimeError:
+        pcov = [0]*5      
+        popt = p0
+        print("Could not fit data\n") 
+    
+    perr = np.sqrt(np.diag(pcov))
+    return popt, perr
+
+def fit_cauchy_lorentz(x, y, p0=[0]*5, maxfev=20000, autoguess=1, filtered=0, window_length=11, poly_order=5):
+
+    if(autoguess):
+        mean, peak, fwhm = fit_autoguess(x, y, filtered, window_length, poly_order)
+        p0 = [mean, peak, fwhm/2, peak, fwhm/2]    
+
+    try:
+        popt, pcov = curve_fit(cauchy_lorentz_function, x, y, p0=p0, maxfev=maxfev)
+        
+    except ValueError:
+        popt, pcov = [0]*3, [0]*3        
+        print("Could not fit data\n") 
+    except RuntimeError:
+        pcov = [0]*5      
+        popt = p0
+        print("Could not fit data\n") 
+    
+    perr = np.sqrt(np.diag(pcov))
+    return popt, perr
+
+
 def fit_autoguess(x, y, filtered=0, window_length=11, poly_order=5):
 
     fwhm = get_fwhm(x, y, oversampling=200)[0]
@@ -118,6 +160,48 @@ def fit_pseudo_voigt_asymmetric(x, y, p0=[0]*6, autoguess=1, maxfev=20000, plot=
     return popt, perr  
 
 
+def fit_cauchy(x, y, p0=[0]*3, maxfev=20000, autoguess=1, filtered=0, window_length=11, poly_order=5):
+
+    if(autoguess):
+        mean, peak, fwhm = fit_autoguess(x, y, filtered, window_length, poly_order)
+        p0 = [peak, mean, fwhm/2]        
+
+    try:
+        popt, pcov = curve_fit(cauchy_function, x, y, p0=p0, maxfev=maxfev)
+        
+    except ValueError:
+        popt, pcov = [0]*3, [0]*3        
+        print("Could not fit data\n") 
+    except RuntimeError:
+        pcov = [0]*5      
+        popt = p0
+        print("Could not fit data\n") 
+    
+    perr = np.sqrt(np.diag(pcov))
+    return popt, perr  
+
+
+def fit_pearson_vii(x, y, p0=[0]*4, maxfev=20000, autoguess=1, filtered=0, window_length=11, poly_order=5):
+
+    if(autoguess):
+        mean, peak, fwhm = fit_autoguess(x, y, filtered, window_length, poly_order)
+        p0 = [peak, mean, fwhm/2, 4.0]        
+
+    try:
+        popt, pcov = curve_fit(pearson_vii_function, x, y, p0=p0, maxfev=maxfev)
+        
+    except ValueError:
+        popt, pcov = [0]*3, [0]*3        
+        print("Could not fit data\n") 
+    except RuntimeError:
+        pcov = [0]*5      
+        popt = p0
+        print("Could not fit data\n") 
+    
+    perr = np.sqrt(np.diag(pcov))
+    return popt, perr  
+
+
 def linear_function(x, a, b):
     return a*x + b
 
@@ -129,6 +213,13 @@ def lorentz_function(x, a, x0, sigma):
 
 def lorentz_gauss_function(x, x0, a, sigma, b, gamma):
     return a*np.exp(-(x-x0)**2/(2*sigma**2)) + (b / (gamma * (1 + ((x - x0) / gamma )**2)))
+
+def cauchy_gauss_function(x, x0, a1, sigma1, a2, sigma2):
+    return gauss_function(x, a1, x0, sigma1) + cauchy_function(x, x0, a2, sigma2)
+
+def cauchy_lorentz_function(x, x0, a1, sigma1, a2, sigma2):
+    return lorentz_function(x, a1, x0, sigma1) + cauchy_function(x, x0, a2, sigma2)
+
 
 def error_function(x, a, x0, sigma, y0):
     
@@ -171,6 +262,16 @@ def pseudo_voigt_asymmetric(x, x0, a, sigma, alpha, beta, m):
     pseudov_asymmetric = term1 + term2
     pseudov_asymmetric *= a / np.max(pseudov_asymmetric)
     return pseudov_asymmetric
+
+
+def cauchy_function(x, x0, a, sigma):
+    
+    return a / (1 + ((x-x0)/sigma)**2)
+
+def pearson_vii_function(x, x0, a, sigma, m):
+    
+    return a * (1 + ((x-x0)**2) / (m * sigma**2))
+
 
 
 def calc_rsquared(y, yfit):

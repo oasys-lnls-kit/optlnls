@@ -24,3 +24,22 @@ def replace_char(filename, char, new_char, new_filename=''):
     with open(new_filename, 'w') as f:
         f.write(data)
         f.close()
+        
+        
+def logspace(base=[2, 4, 6, 8, 10], power=[0,1,2]):
+    
+    x = []
+    for i in power:
+        for j in base:
+            x.append(j * 10**i)
+            
+    return np.array(x)    
+        
+        
+        
+        
+        
+        
+        
+        
+        
