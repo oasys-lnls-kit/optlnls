@@ -10,7 +10,7 @@ Created on Thu Jul  9 11:09:54 2020
 import numpy as np
 from scipy.optimize import curve_fit
 from optlnls.constants import * 
-
+from matplotlib import pyplot as plt
 
 
 def wrap_phase(phase_2D, phase_shift=1.0):
@@ -266,18 +266,23 @@ class wfr1D(object):
     def run_caustics(self, zmin, zmax, nz):
         from pyhank import HankelTransform
         z = np.linspace(zmin, zmax, nz)
+        nx = len(self.x)
         
         H = HankelTransform(order=0, radial_grid=self.x)
         field_H = H.to_transform_r(self.field) 
         field_Hk = H.qdht(field_H)
-        field_z = np.zeros((len(self.x), nz), dtype=complex)
+        field_z = np.zeros((nx, nz), dtype=complex)
         kz = np.sqrt(self.k**2 - H.kr**2)
         for i, zi in enumerate(z):
             phi = kz * zi  # Propagation phase
             field_Hkz = field_Hk * np.exp(1j * phi)  # Apply propagation
             field_Hz = H.iqdht(field_Hkz)  # iQDHT
             field_z[:,i] = H.to_original_r(field_Hz)  # Interpolate output
-        caustics = np.abs(field_z)**2
+        
+        caustics = np.zeros((nx+1, nz+1))
+        caustics[0,1:] = z
+        caustics[1:,0] = self.x
+        caustics[1:,1:] = np.abs(field_z)**2
 
         return caustics
         
@@ -324,7 +329,7 @@ class wfr1D(object):
         
     def plot_wfr(self, quantity='intensity', mirrored=1, 
                  title='', x_unit_factor=1e6, xlim=[],
-                 yscale='linear'):
+                 yscale='linear', savepath=''):
 
         x = self.x        
         if(quantity == 'intensity'):
@@ -346,6 +351,7 @@ class wfr1D(object):
             y = np.concatenate((y[::-1], y[1:]))
         
         plt.figure(figsize=(4.5, 3.0))
+        plt.subplots_adjust(0.15,0.15,0.97,0.92)
         plt.plot(x*x_unit_factor, y)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
@@ -355,6 +361,8 @@ class wfr1D(object):
             plt.xlim(xlim[0]*x_unit_factor, 
                      xlim[1]*x_unit_factor)
         plt.yscale(yscale)
+        if(savepath != ''):
+            plt.savefig(savepath, dpi=300)
 
 
 
