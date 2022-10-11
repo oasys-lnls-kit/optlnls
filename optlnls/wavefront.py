@@ -123,10 +123,12 @@ class xfw_transmission1D(object):
         self.wavelength = wavelength
         
     def load_from_file(self, filename : str = '',        
-                       pixel : float = 100e-9):
+                       pixel : float = 100e-9,
+                       width_factor : float = 0.1):
         
         self.filename = filename
         self.pixel = pixel
+        self.width_factor
         
         # wavenumber = 2 * np.pi / wavelength
         colAmp = 3
@@ -136,7 +138,8 @@ class xfw_transmission1D(object):
         data = np.genfromtxt(filename)
 
         R = 1*data[0,1] # minimum aperture radius of the lens 
-        da = 0.1 * self.wavelength * self.f / R # slit width
+        da = self.width_factor * self.wavelength * self.f / R # slit width
+        self.slit_width = da
         # Lmax = R * f / data[0,1]
 
         # ### limits that define slits region and map resolution
