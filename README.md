@@ -14,5 +14,7 @@ Artur C. Pinto (artur.pinto@lnls.br)
 
 Humberto Rigamonti Jr. (humberto.junior@lnls.br)
 
+João Pedro I. Astolfo (joao.astolfo@lnls.br)
+
 Bernd C. Meyer
 

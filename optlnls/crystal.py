@@ -12,7 +12,8 @@ import xraylib
 from scipy.constants import physical_constants 
 import matplotlib.pyplot as plt
 import numpy as np
-    
+
+from typing import Tuple
 
 # Functions:
 
@@ -526,6 +527,85 @@ def calc_Darwin_curve(delta_theta=np.linspace(-0.00015, 0.00015, 5000), crystal=
     return delta_theta, R, zeta_total, zeta_FWHM, w_total, w_FWHM, w0
 
 
+def assymetric_cut_energy_correction(crystal: str = 'Si', energy: float = 11,
+                                     miller: list = [2, 2, 0],
+                                     alpha: float = 12.37) -> Tuple[float, float]:
+    """
+    Calculates the angular correction for assymetric cut crystals. The rocking
+    curves are shifted for those crystals, thus a correction must be introduced
+    to maximize the beam intensity after the optical element.
+
+    Parameters
+    ----------
+    crystal : str, optional
+        Crystal material. The default is 'Si'.
+    energy : float, optional
+        Desired energy in keV. The default is 11.
+    miller : list[int], optional
+        Miller indices [h, k , l]. The default is [2, 2, 0].
+    alpha : float, optional
+        Assymetric cut angle. The default is 12.37.
+
+    Returns
+    -------
+    Tuple[float, float]
+        Corrected incident and reflected angles in degrees.
+
+    """
+    
+    import scipy.constants as cte
+    
+    from scipy.optimize import newton
+    from scipy.interpolate import interp1d
+    
+    target = energy
+    crystal_dict = xraylib.Crystal_GetCrystal(crystal)
+    dSpacing = xraylib.Crystal_dSpacing(crystal_dict, *miller)
+    
+    
+    def angle_to_energy(angles: list, bragg) -> list:
+        
+        ang = np.array(angles)
+        
+        energies = (cte.h*cte.c/cte.e)/(2*dSpacing*1e-10*np.sin(bragg + ang))
+        
+        return energies
+    
+    
+    def f(x):
+        
+        w_s_curve, intensity, *_ = calc_Darwin_curve(np.linspace(np.radians(-0.005), np.radians(0.01), 5000), crystal, x, *miller, save_txt=False, save_fig=False)
+        
+        shift_s = calc_rocking_curve_shift(crystal, x, *miller)
+        
+        bragg = calc_Bragg_angle(crystal, x, *miller)
+        m = np.sin(bragg + np.radians(alpha))/np.sin(bragg - np.radians(alpha))
+        
+        shift_o = 0.5*(1 + m)*shift_s
+        shift_h = 0.5*(1 + 1/m)*shift_s
+        
+        w_o = m**0.5*w_s_curve + shift_o
+        w_h = (1/m)**0.5*w_s_curve + shift_h
+        
+        e = angle_to_energy(w_s_curve + shift_s, bragg)
+        e_o = angle_to_energy(w_o, bragg)
+        e_h = angle_to_energy(w_h, bragg)
+        
+        fenergy = interp1d(e_o, intensity)
+        e_new = e_h
+        transmission = fenergy(e_new) * intensity
+        
+        index = np.where(transmission == max(transmission))[0]
+        
+        return abs(target - e_new[int(index)]/1000)
+    
+    root = newton(f, target)
+    
+    new_bragg = np.degrees(calc_Bragg_angle(crystal, root, *miller))
+    
+    return new_bragg - alpha, new_bragg + alpha
+
+
 if __name__ == '__main__':
     
     
@@ -571,3 +651,12 @@ if __name__ == '__main__':
     print('zeta_total = %.6E' %(zeta_total))
     print('zeta_FWHM = %.6E' %(zeta_FWHM))
     print('shift = %.4f urad' %(1e+6*w0))
+    
+    
+    # Example 6:
+    
+    incident, reflected = assymetric_cut_energy_correction('Si', 11, [2, 2, 0], 12.37)
+    
+    print('\n')
+    print(f'Incident beam angle = {incident:.4f}')
+    print(f'Reflected beam angle = {reflected:.4f}')
