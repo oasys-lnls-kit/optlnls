@@ -1,5 +1,5 @@
 
-from optlnls.source import srw_undulator_spectrum, BM_spectrum
+from optlnls.source import srw_undulator_spectrum, BM_spectrum, BM_vertical_acc
 from optlnls.math import get_fwhm, weighted_avg_and_std
 import numpy as np
 import matplotlib.pyplot as plt
@@ -114,7 +114,21 @@ def calc_und_flux(beam, nbins, eBeamEnergy, eSpread, current,
     return outputs
 
 
-def calc_BM_flux(beam, E, I, B, hor_acc_mrad, nbins, show_plots=0, verbose=0):
+def calc_wiggler_flux(beam, E, I, B, N_periods, hor_acc_mrad, nbins, 
+                      vert_acc_mrad=0, e_beam_vert_div=1e-6, show_plots=0, verbose=0):
+    
+    WG_flux = calc_BM_flux(beam, E, I, B, hor_acc_mrad, 
+                        nbins, vert_acc_mrad, e_beam_vert_div)
+    WG_flux['total flux at source'] = WG_flux['total flux at source'] * (2*N_periods)
+    WG_flux['total flux propagated'] = WG_flux['total flux propagated'] * (2*N_periods)
+    WG_flux['total power at source'] = np.nan
+    WG_flux['total power propagated'] = np.nan
+    
+    return WG_flux
+
+
+def calc_BM_flux(beam, E, I, B, hor_acc_mrad, nbins, 
+                 vert_acc_mrad=0, e_beam_vert_div=1e-6, show_plots=0, verbose=0):
     
     import numpy as np
     import matplotlib.pyplot as plt
@@ -159,8 +173,22 @@ def calc_BM_flux(beam, E, I, B, hor_acc_mrad, nbins, show_plots=0, verbose=0):
         # plt.show()
     
     ###########################################
-    #### CALCULATE BENDING MAGNET SPECTRUM ####   
-    BM_spec = BM_spectrum(E, I, B, E_b, hor_acc_mrad)   
+    #### CALCULATE BENDING MAGNET SPECTRUM #### 
+    if(vert_acc_mrad > 0):
+        acc = BM_vertical_acc(E, B, E_b, 
+                              div_limits=[-vert_acc_mrad/2/1000, 
+                                          vert_acc_mrad/2/1000],
+                              e_beam_vert_div=e_beam_vert_div)
+        vert_acc_factor = acc['acceptance']
+        
+        # print('\n\n****************************')
+        # print('Energy[eV] vs Acceptance factor')
+        # for i in range(len(E_b)):
+        #     print('{0:.2f}, {1:.6f}'.format(E_b[i], vert_acc_factor[i]))
+    else:
+        vert_acc_factor = 1
+    
+    BM_spec = BM_spectrum(E, I, B, E_b, hor_acc_mrad) * vert_acc_factor   
     BL_spec = BM_spec*T_E
     
     if(show_plots):
