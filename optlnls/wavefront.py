@@ -11,6 +11,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 from optlnls.constants import * 
 from matplotlib import pyplot as plt
+import pickle
 
 
 def wrap_phase(phase_2D, phase_shift=1.0):
@@ -128,7 +129,7 @@ class xfw_transmission1D(object):
         
         self.filename = filename
         self.pixel = pixel
-        self.width_factor
+        self.width_factor = width_factor
         
         # wavenumber = 2 * np.pi / wavelength
         colAmp = 3
@@ -366,6 +367,15 @@ class wfr1D(object):
         plt.yscale(yscale)
         if(savepath != ''):
             plt.savefig(savepath, dpi=300)
+            
+    def save(self, filename_pkl):
+        with open(filename_pkl, 'wb') as outp:
+            pickle.dump(self, outp, pickle.HIGHEST_PROTOCOL)
+    
+    def load(self, filename_pkl):
+        with open(filename_pkl, 'rb') as inp:
+            wfr = pickle.load(inp)
+            return wfr
 
 
 
