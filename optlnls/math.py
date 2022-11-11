@@ -483,7 +483,32 @@ def zero_padding(mtx1, zero_pad_x=0, zero_pad_y=0, debug=False):
     return mtx2
 
 
+def radial_to_2D(r, y, interp_kind='cubic'):
 
+    ### create array with negative values
+    r2 = np.concatenate((-r[::-1], r[1:]))
+    nr2 = len(r2)
+    
+    ### create 2D arrays and calculate radius
+    xx, yy = np.meshgrid(r2, r2)
+    rr = np.sqrt(xx**2 + yy**2)
+    
+    y2D = np.zeros(rr.shape)
+    rmax = np.max(r)
+    
+    ### interpolate radial function
+    y_interp = interp1d(r, y, kind=interp_kind)
+    
+    ### calculate 2D values for each point in the matrix 
+    for i in range(nr2):
+        for j in range(nr2):
+            
+            radius = rr[i,j]
+            
+            if(radius <= rmax):
+                y2D[i,j] = y_interp(radius) 
+        
+    return y2D
 
 
 
