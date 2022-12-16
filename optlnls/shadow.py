@@ -582,35 +582,35 @@ def run_shadow_caustic(filename, beam, zStart, zFin, nz, zOffset, colh, colv, co
     for i in range(nz):        
         beam.retrace(z_points[i]);
         
-        (col_v,col_h,weights) = beam.getshcol((colv,colh,colref),nolost=1)
-        (hh,yy,xx) = np.histogram2d(col_v, col_h, bins=[nbinsv,nbinsh], range=[yrange,xrange], 
-                                    normed=False, weights=weights)
+        # (col_v,col_h,weights) = beam.getshcol((colv,colh,colref),nolost=1)
+        # (hh,yy,xx) = np.histogram2d(col_v, col_h, bins=[nbinsv,nbinsh], range=[yrange,xrange], 
+        #                             normed=False, weights=weights)
 
-        histo = dict()
-        histo['col_h'] = colh
-        histo['col_v'] = colv
-        histo['nolost'] = 1
-        histo['nbins_h'] = nbinsh
-        histo['nbins_v'] = nbinsv
-        histo['ref'] = colref
-        histo['xrange'] = xrange
-        histo['yrange'] = yrange
-        histo['bin_h_edges'] = xx
-        histo['bin_v_edges'] = yy
-        histo['bin_h_left'] = np.delete(xx,-1)
-        histo['bin_v_left'] = np.delete(yy,-1)
-        histo['bin_h_right'] = np.delete(xx,0)
-        histo['bin_v_right'] = np.delete(yy,0)
-        histo['bin_h_center'] = 0.5*(histo['bin_h_left']+histo['bin_h_right'])
-        histo['bin_v_center'] = 0.5*(histo['bin_v_left']+histo['bin_v_right'])
-        histo['histogram'] = hh
-        histo['histogram_h'] = hh.sum(axis=0)
-        histo['histogram_v'] = hh.sum(axis=1)
-        histo['intensity'] = beam.intensity(nolost=1)
-        histo['nrays'] = beam.nrays(nolost=0)
-        histo['good_rays'] = beam.nrays(nolost=1)
+        # histo = dict()
+        # histo['col_h'] = colh
+        # histo['col_v'] = colv
+        # histo['nolost'] = 1
+        # histo['nbins_h'] = nbinsh
+        # histo['nbins_v'] = nbinsv
+        # histo['ref'] = colref
+        # histo['xrange'] = xrange
+        # histo['yrange'] = yrange
+        # histo['bin_h_edges'] = xx
+        # histo['bin_v_edges'] = yy
+        # histo['bin_h_left'] = np.delete(xx,-1)
+        # histo['bin_v_left'] = np.delete(yy,-1)
+        # histo['bin_h_right'] = np.delete(xx,0)
+        # histo['bin_v_right'] = np.delete(yy,0)
+        # histo['bin_h_center'] = 0.5*(histo['bin_h_left']+histo['bin_h_right'])
+        # histo['bin_v_center'] = 0.5*(histo['bin_v_left']+histo['bin_v_right'])
+        # histo['histogram'] = hh
+        # histo['histogram_h'] = hh.sum(axis=0)
+        # histo['histogram_v'] = hh.sum(axis=1)
+        # histo['intensity'] = beam.intensity(nolost=1)
+        # histo['nrays'] = beam.nrays(nolost=0)
+        # histo['good_rays'] = beam.nrays(nolost=1)
         
-        # histo = beam.histo2(col_h=colh, col_v=colv, nbins_h=nbinsh, nbins_v=nbinsv, nolost=1, ref=colref, xrange=xrange, yrange=yrange);
+        histo = beam.histo2(col_h=colh, col_v=colv, nbins_h=nbinsh, nbins_v=nbinsv, nolost=1, ref=colref, xrange=xrange, yrange=yrange);
         append_dataset_hdf5(filename, data=histo, z=z_points[i], nz=nz, tag=i+1, t0=t0, ndigits=len(str(nz)))
     read_caustic(filename, write_attributes=True)
 
