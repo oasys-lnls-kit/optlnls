@@ -299,14 +299,14 @@ def append_dataset_hdf5(filename, data, z, nz, tag, t0, ndigits):
             dset.attrs['fwhm_h_shadow'] = data['fwhm_h']
             dset.attrs['center_h_shadow'] = (data['fwhm_coordinates_h'][0] + data['fwhm_coordinates_h'][1]) / 2.0
         except:
-            print('CAUSTIC WARNING: FWHM X could not be calculated by Shadow')
+            print('CAUSTIC WARNING: FWHM X could not be calculated by Shadow at z position = {0:.3f}'.format(z[0]))
             dset.attrs['fwhm_h_shadow'] = np.nan
             dset.attrs['center_h_shadow'] = np.nan
         try:
             dset.attrs['fwhm_v_shadow'] = data['fwhm_v']
             dset.attrs['center_v_shadow'] = (data['fwhm_coordinates_v'][0] + data['fwhm_coordinates_v'][1]) / 2.0
         except:
-            print('CAUSTIC WARNING: FWHM Y could not be calculated by Shadow')
+            print('CAUSTIC WARNING: FWHM Y could not be calculated by Shadow at z position = {0:.3f}'.format(z[0]))
             dset.attrs['fwhm_v_shadow'] = np.nan
             dset.attrs['center_v_shadow'] = np.nan
             
@@ -318,7 +318,7 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
     
     with h5py.File(filename, 'r+') as f:
     
-        g = f['datasets']    
+        g = f['datasets']
     
         dset_names = list(g.keys())
         
@@ -352,19 +352,19 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
         
             center_shadow[i,0] = g[dset].attrs['center_h_shadow']
             center_shadow[i,1] = g[dset].attrs['center_v_shadow']
-            center[i,0] = g[dset].attrs['mean_h']    
+            center[i,0] = g[dset].attrs['mean_h']
             center[i,1] = g[dset].attrs['mean_v']
-            rms[i,0] = g[dset].attrs['rms_h']    
+            rms[i,0] = g[dset].attrs['rms_h']
             rms[i,1] = g[dset].attrs['rms_v']
             fwhm[i,0] = g[dset].attrs['fwhm_h'][0]
             fwhm[i,1] = g[dset].attrs['fwhm_v'][0]
-            fwhm_shadow[i,0] = g[dset].attrs['fwhm_h_shadow']    
+            fwhm_shadow[i,0] = g[dset].attrs['fwhm_h_shadow']
             fwhm_shadow[i,1] = g[dset].attrs['fwhm_v_shadow']
             
             #if(plot2D):
             histo2D = np.array(g[dset])
-            histoH[:,i] = histo2D.sum(axis=0)
-            histoV[:,i] = histo2D.sum(axis=1)
+            histoH[:,i] = histo2D.sum(axis=1)
+            histoV[:,i] = histo2D.sum(axis=0)
                 
     #### FIND MINIMUMS AND ITS Z POSITIONS
 
