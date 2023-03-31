@@ -12,7 +12,7 @@ from matplotlib.colors import LogNorm
 from optlnls.math import get_fwhm, calc_rms, zero_padding
 from optlnls.fitting import gauss_function, lorentz_function, lorentz_gauss_function
 from optlnls.fitting import fit_gauss, fit_lorentz, fit_lorentz_gauss
-
+from scipy.signal import savgol_filter
 
 def find_peak(xz):
     zmax = [0, 0]; xmax = [0, 0]
@@ -41,7 +41,7 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
                      invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=1, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
                      x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25, z_range_min=float('NaN'), z_range_max=float('NaN'),
-                     zero_pad_x=0, zero_pad_y=0, export_slices=0, isdensity=1):
+                     zero_pad_x=0, zero_pad_y=0, export_slices=0, isdensity=1, savgol=[11,4]):
     """
     
 
@@ -90,7 +90,8 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
         Fit the slices. 
         1: Gauss
         2: Lorentz
-        3: Gauss-Lorentz        
+        3: Gauss-Lorentz      
+        4: Savitzky-Golay filter
         The default is 0 (don't fit).
     overSampling : float, optional
         multiplication factor for slice number of points for FWHM. The default is 200.0.
@@ -313,6 +314,13 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
     
             poptlg_x_cut, perrlg_x_cut = fit_lorentz_gauss(x_axis, x_cut, [x_mean, x_cut_max, x_cut_rms, x_cut_max, x_cut_rms], 10000)
             x_cut_fit = lorentz_gauss_function(x_axis, poptlg_x_cut[0], poptlg_x_cut[1], poptlg_x_cut[2], poptlg_x_cut[3], poptlg_x_cut[4])
+            
+        ### savgol filter
+        elif(fitType==4):
+            
+            z_cut_fit = savgol_filter(z_cut, window_length=savgol[0], polyorder=savgol[1])
+            x_cut_fit = savgol_filter(x_cut, window_length=savgol[0], polyorder=savgol[1])            
+            
       
         z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
         x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
