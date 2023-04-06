@@ -215,7 +215,7 @@ def read_srw_wfr(wfr, pol_to_extract=6, int_to_extract=0, unwrap=0,
     if(flip_y):
         y = y[::-1]
     
-    mtx = np.zeros((wfr.mesh.ny+1, wfr.mesh.nx+1), dtype=np.float)
+    mtx = np.zeros((wfr.mesh.ny+1, wfr.mesh.nx+1), dtype=float)
     mtx[0,1:] = x
     mtx[1:,0] = y
     mtx[1:,1:] = int_mtx
