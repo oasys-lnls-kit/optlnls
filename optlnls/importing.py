@@ -55,7 +55,14 @@ def read_shadow_beam(beam, x_column_index=1, y_column_index=3, nbins_x=100, nbin
     XY = np.zeros((nbins_y+1,nbins_x+1))
     XY[1:,0] = y_axis
     XY[0,1:] = x_axis
-    XY[1:,1:] = np.array(xy).transpose()
+    XY[1:,1:] = np.array(xy).transpose() ### ***
+    
+    ##########################################################################
+    ### *** This transpose() is necessary because shadow uses np.histogram2d()
+    ### in a way that the histogram matrix is (nx,ny).
+    ### REF: https://github.com/oasys-kit/shadow3/blob/master/Shadow/ShadowLibExtensions.py
+    ### see line 754 (inside histo2() )
+    ##########################################################################
     
     if(gaussian_filter != 0):
         XY[1:,1:] = ndimage.gaussian_filter(np.array(xy).transpose(), gaussian_filter)
