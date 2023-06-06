@@ -125,7 +125,8 @@ class xfw_transmission1D(object):
         
     def load_from_file(self, filename : str = '',        
                        pixel : float = 100e-9,
-                       width_factor : float = 0.1):
+                       width_factor : float = 0.1,
+                       sum_two_pi : bool = False):
         
         self.filename = filename
         self.pixel = pixel
@@ -165,8 +166,9 @@ class xfw_transmission1D(object):
             if self.sqpeak(r,rMed,rInt) == 1:
                 mapaAmp[i] = self.perfilr(r, da, data, colAmp)
                 phase = self.perfilr(r, da, data, colPhase)
-                if(phase < 0):
-                    phase += 2 * np.pi
+                if(sum_two_pi):
+                    if(phase < 0):
+                        phase += 2 * np.pi
                 mapaPhase[i] = phase
                 
         self.amplitude = mapaAmp
