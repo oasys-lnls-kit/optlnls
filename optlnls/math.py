@@ -239,16 +239,20 @@ def get_fwhm(x, y, oversampling=1, zero_padding=True, avg_correction=False,
             
         if(avg_correction):
             avg_y = (left_fine_y[left_hwhm_idx]+ right_fine_y[right_hwhm_idx])/2.0
-            popt_left = np.polyfit(left_fine_x[left_hwhm_idx-1 : left_hwhm_idx+2], left_fine_y[left_hwhm_idx-1 : left_hwhm_idx+2] , 1) 
-            popt_right = np.polyfit(right_fine_x[right_hwhm_idx-1 : right_hwhm_idx+2], right_fine_y[right_hwhm_idx-1 : right_hwhm_idx+2] , 1) 
+            try:
+                popt_left = np.polyfit(left_fine_x[left_hwhm_idx-1 : left_hwhm_idx+2], left_fine_y[left_hwhm_idx-1 : left_hwhm_idx+2] , 1) 
+                popt_right = np.polyfit(right_fine_x[right_hwhm_idx-1 : right_hwhm_idx+2], right_fine_y[right_hwhm_idx-1 : right_hwhm_idx+2] , 1) 
+                x_left = (avg_y-popt_left[1])/popt_left[0]
+                x_right = (avg_y-popt_right[1])/popt_right[0]
+                fwhm = x_right - x_left 
+                
+                return [fwhm, x_left, x_right, avg_y, avg_y]
             
-            x_left = (avg_y-popt_left[1])/popt_left[0]
-            x_right = (avg_y-popt_right[1])/popt_right[0]
-            fwhm = x_right - x_left 
-
-            return [fwhm, x_left, x_right, avg_y, avg_y]
+            except:
+                return [fwhm, left_fine_x[left_hwhm_idx], right_fine_x[right_hwhm_idx], left_fine_y[left_hwhm_idx], right_fine_y[right_hwhm_idx]]
+                
+            
         else:
-
             return [fwhm, left_fine_x[left_hwhm_idx], right_fine_x[right_hwhm_idx], left_fine_y[left_hwhm_idx], right_fine_y[right_hwhm_idx]]
 #                return [fwhm, left_fine_x[left_hwhm_idx], right_fine_x[right_hwhm_idx], left_fine_y[left_hwhm_idx], right_fine_y[right_hwhm_idx], right_fine_x, right_fine_y, left_fine_x, left_fine_y]
         

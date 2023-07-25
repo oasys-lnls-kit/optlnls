@@ -322,8 +322,8 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
             x_cut_fit = savgol_filter(x_cut, window_length=savgol[0], polyorder=savgol[1])            
             
       
-        z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
-        x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=True, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
+        z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
+        x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
 
         z_cut_fit_rms = calc_rms(z_axis, z_cut_fit)
         x_cut_fit_rms = calc_rms(x_axis, x_cut_fit)
