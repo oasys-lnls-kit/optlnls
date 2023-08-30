@@ -182,7 +182,7 @@ def run_hybrid(beam, units=2, diff_plane=1, calcType=2, dist_to_img_calc=0, dist
                 input_parameters.ghy_automatic = automatic
             
                 try:
-                    calculation_parameters = hy_run(input_parameters)
+                    calculation_parameters = hy_run(input_parameters,write_file)
                     
                     distance = input_parameters.ghy_distance
                     nbins_x = int(input_parameters.ghy_nbins_x)
