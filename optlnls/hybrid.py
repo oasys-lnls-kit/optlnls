@@ -20,6 +20,7 @@ Created on Fri May  6 09:20:01 2022
 """
 import numpy as np
 import copy
+import os
 
 #from hybrid_funcs.propagate import propagate_1D_x_direction, propagate_1D_z_direction, propagate_2D
 #from hybrid_funcs.utility import get_delta, read_shadow_beam, sh_readsh, sh_readangle, sh_readsurface, h5_readsurface
@@ -215,15 +216,15 @@ def run_hybrid(beam, units=2, diff_plane=1, calcType=2, dist_to_img_calc=0, dist
         raise Exception('Hybrid Screen calculation failed')
 
 
-def hy_run(input_parameters=HybridInputParameters()):
+def hy_run(input_parameters=HybridInputParameters(),write_file=0):
     calculation_parameters = HybridCalculationParameters()
 
     try:
         input_parameters.original_shadow_beam = input_parameters.shadow_beam.duplicate(history=True)
         
-        hy_check_congruence(input_parameters, calculation_parameters)
+        hy_check_congruence(input_parameters,calculation_parameters,write_file)
         
-        hy_readfiles(input_parameters, calculation_parameters)	#Read shadow output files needed by HYBRID
+        hy_readfiles(input_parameters, calculation_parameters,write_file)	#Read shadow output files needed by HYBRID
         
         if input_parameters.ghy_diff_plane == 4:
             # FIRST: X DIRECTION
@@ -269,7 +270,9 @@ def hy_run(input_parameters=HybridInputParameters()):
     return calculation_parameters
 
 
-def hy_check_congruence(input_parameters=HybridInputParameters(), calculation_parameters=HybridCalculationParameters()):
+def hy_check_congruence(input_parameters=HybridInputParameters(),
+                        calculation_parameters=HybridCalculationParameters(),
+                        write_file=0):
     if input_parameters.ghy_n_oe < 0 and input_parameters.shadow_beam._oe_number == 0: # TODO!!!!!
         raise Exception("Source calculation not yet supported")
 
@@ -369,6 +372,12 @@ def hy_check_congruence(input_parameters=HybridInputParameters(), calculation_pa
                     oe_before._oe.FWRITE = 1
                     mirror_beam = ShadowBeam.traceFromOE(beam_before, oe_before, history=False)
                     mirror_beam.loadFromFile("mirr." + str_n_oe)
+                    if not write_file:
+                        os.remove("mirr."+str_n_oe)
+                        os.remove("effic."+str_n_oe)
+                        os.remove("optax.0"+str(int((str_n_oe))-1))
+                        os.remove("optax."+str_n_oe)
+                        os.remove("rmir."+str_n_oe)
 
                     max_tangential = oe_before._oe.RLEN1
                     min_tangential = oe_before._oe.RLEN2
@@ -470,7 +479,9 @@ def hy_check_congruence(input_parameters=HybridInputParameters(), calculation_pa
                                 print("O.E. does not cut the beam in the Tangential plane:\nCalculation is done in Sagittal plane only")
 
 
-def hy_readfiles(input_parameters=HybridInputParameters(), calculation_parameters=HybridCalculationParameters()):
+def hy_readfiles(input_parameters=HybridInputParameters(),
+                 calculation_parameters=HybridCalculationParameters(),
+                 write_file=0):
     if input_parameters.ghy_calcType in [5, 6]: #CRL OR LENS
         history_entry =  input_parameters.shadow_beam.getOEHistory(input_parameters.shadow_beam._oe_number)
         compound_oe = history_entry._shadow_oe_end
@@ -685,6 +696,7 @@ def hy_readfiles(input_parameters=HybridInputParameters(), calculation_parameter
 
     # read shadow screen file
     screen_beam= sh_readsh(fileShadowScreen)    #xshi change from 0 to 1
+    if not write_file: os.remove(fileShadowScreen)
 
     if input_parameters.file_to_write_out == 1:
         screen_beam.writeToFile("hybrid_beam_at_oe_hybrid_screen." + str_n_oe)
@@ -716,6 +728,13 @@ def hy_readfiles(input_parameters=HybridInputParameters(), calculation_parameter
 
     if input_parameters.ghy_calcType in [2, 3, 4]:
         mirror_beam = sh_readsh("mirr." + str_n_oe)  #xshi change from 0 to 1
+        if not write_file:
+            os.remove("mirr."+str_n_oe)
+            os.remove("effic."+str_n_oe)
+            os.remove("optax.0"+str(int((str_n_oe))-1))
+            os.remove("optax."+str_n_oe)
+            os.remove("rmir."+str_n_oe)
+            os.remove("star."+str_n_oe)
 
         if input_parameters.file_to_write_out == 1:
             mirror_beam.writeToFile("hybrid_footprint_on_oe." + str_n_oe)
@@ -727,6 +746,7 @@ def hy_readfiles(input_parameters=HybridInputParameters(), calculation_parameter
         # read in angle files
 
         angle_inc, angle_ref = sh_readangle("angle." + str_n_oe, mirror_beam)   #xshi change from 0 to 1
+        if not write_file: os.remove("angle."+str_n_oe)
 
         calculation_parameters.angle_inc = (90.0 - angle_inc)/180.0*1e3*np.pi
         calculation_parameters.angle_ref = (90.0 - angle_ref)/180.0*1e3*np.pi
