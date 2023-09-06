@@ -290,4 +290,18 @@ def read_srw_int(filename):
     return mtx
 
 
+def read_spectra_json_flux(fname):
 
+    f = open(fname)
+    prm = json.load(f)
+    f.close()
+    
+    outputs = {}
+    
+    outputs['energy'] = np.array(prm['Output']['variables'][0])
+    outputs['flux'] = np.array(prm['Output']['data'][0])
+    outputs['PL(s1/s0)'] = np.array(prm['Output']['data'][1])
+    outputs['PC(s3/s0)'] = np.array(prm['Output']['data'][2])
+    outputs['PL45(s2/s0)'] = np.array(prm['Output']['data'][3])
+
+    return outputs
