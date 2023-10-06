@@ -151,7 +151,7 @@ def read_RefractiveIndexInfo(filename, wl_range=[0,0]):
     return wl, nc
     
 	
-def fresnel_reflectivity(n1, n2, theta_surface_deg):
+def fresnel_reflectivity(n1, n2, theta_surface_deg, complex_coeff=False):
     
     n1 = n1.astype(np.complex) if isinstance(n1, (np.ndarray)) else complex(n1)
     n2 = n2.astype(np.complex) if isinstance(n2, (np.ndarray)) else complex(n2)
@@ -161,15 +161,18 @@ def fresnel_reflectivity(n1, n2, theta_surface_deg):
 
     rs = (n1*np.cos(θi)-n2*np.cos(θt)) / (n1*np.cos(θi)+n2*np.cos(θt))
     rp = (n2*np.cos(θi)-n1*np.cos(θt)) / (n1*np.cos(θt)+n2*np.cos(θi))
-
-    Rs = np.abs(rs)**2
-    Rp = np.abs(rp)**2
-    Runpol = (Rs + Rp)/2
     
     #Psi_s = np.rad2deg(np.angle(rs))
     #Psi_p = np.rad2deg(np.angle(rp))
 
-    return Rs, Rp, Runpol
+    if(complex_coeff):
+        return rs, rp
+    
+    else:
+        Rs = np.abs(rs)**2
+        Rp = np.abs(rp)**2
+        Runpol = (Rs + Rp)/2
+        return Rs, Rp, Runpol
 
 
 
