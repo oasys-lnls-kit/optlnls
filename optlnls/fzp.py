@@ -24,7 +24,6 @@ class FZP(object):
         self.energy = energy
         self.f = f
         self.resolution = resolution
-        # self.diameter = diameter
         self.wavelength = 1.239842e-6 / energy
         self.k = 2 * np.pi / self.wavelength
         
@@ -42,6 +41,8 @@ class FZP(object):
         self.rn = self.resolution / 1.22
         self.N_zones = int(self.wavelength * self.f / (4 * self.rn**2))
         self.diameter = 4 * self.N_zones * self.rn
+        self.numerical_aperture = self.wavelength / (2 * self.rn)
+        self.dof = self.wavelength / (2 * self.numerical_aperture**2)
 
         if(thickness == 0):
             self.thickness = self.wavelength / (2 * self.delta)
