@@ -368,10 +368,14 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
     #plottitle='Title'
     
     def set_ticks_size(ax, fontsize):
-        for tick in ax.xaxis.get_major_ticks():
-            tick.label.set_fontsize(fontsize)
-        for tick in ax.yaxis.get_major_ticks():
-            tick.label.set_fontsize(fontsize)
+        try:
+            for tick in ax.xaxis.get_major_ticks():
+                tick.label.set_fontsize(fontsize)
+            for tick in ax.yaxis.get_major_ticks():
+                tick.label.set_fontsize(fontsize)
+        except:
+            ax.tick_params(axis='x', labelsize=fontsize)
+            ax.tick_params(axis='y', labelsize=fontsize)
 
     axY.invert_xaxis() #Inverter eixos Y
     
