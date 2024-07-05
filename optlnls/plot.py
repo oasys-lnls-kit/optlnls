@@ -10,8 +10,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from optlnls.math import get_fwhm, calc_rms, zero_padding
-from optlnls.fitting import gauss_function, lorentz_function, lorentz_gauss_function
-from optlnls.fitting import fit_gauss, fit_lorentz, fit_lorentz_gauss
+from optlnls.fitting import gauss_function, lorentz_function, lorentz_gauss_function, pseudo_voigt_asymmetric
+from optlnls.fitting import fit_gauss, fit_lorentz, fit_lorentz_gauss, fit_pseudo_voigt_asymmetric
 from scipy.signal import savgol_filter
 
 def find_peak(xz):
@@ -92,6 +92,7 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
         2: Lorentz
         3: Gauss-Lorentz      
         4: Savitzky-Golay filter
+        5: Pseudo Voigt Asymmetric
         The default is 0 (don't fit).
     overSampling : float, optional
         multiplication factor for slice number of points for FWHM. The default is 200.0.
@@ -320,8 +321,17 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
             
             z_cut_fit = savgol_filter(z_cut, window_length=savgol[0], polyorder=savgol[1])
             x_cut_fit = savgol_filter(x_cut, window_length=savgol[0], polyorder=savgol[1])            
+        
+        ### Pseudo Voigt Asymmetric
+        elif(fitType==5):
             
-      
+            poptpva_z_cut, perrtpva_z_cut = fit_pseudo_voigt_asymmetric(z_axis, z_cut, [z_mean, z_cut_max, z_cut_fwhm, 0.0, 0.0, 0.5], 0, 10000)
+            z_cut_fit = pseudo_voigt_asymmetric(z_axis, poptpva_z_cut[0], poptpva_z_cut[1], poptpva_z_cut[2], poptpva_z_cut[3], poptpva_z_cut[4], poptpva_z_cut[5])
+            
+            poptpva_x_cut, perrtpva_x_cut = fit_pseudo_voigt_asymmetric(x_axis, x_cut, [x_mean, x_cut_max, x_cut_fwhm, 0.0, 0.0, 0.5], 0, 10000)
+            x_cut_fit = pseudo_voigt_asymmetric(x_axis, poptpva_x_cut[0], poptpva_x_cut[1], poptpva_x_cut[2], poptpva_x_cut[3], poptpva_x_cut[4], poptpva_x_cut[5])
+        
+        
         z_cut_fit_fwhm = get_fwhm(z_axis, z_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
         x_cut_fit_fwhm = get_fwhm(x_axis, x_cut_fit, oversampling=overSampling, zero_padding=fwhm_zeroPadding, avg_correction=False, threshold=fwhm_threshold, inmost_outmost=fwhm_int_ext)
 

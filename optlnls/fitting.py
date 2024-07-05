@@ -251,6 +251,41 @@ def pseudo_voigt_asymmetric_normalized(x, x0, sigma, alpha, beta, m):
 
 
 def pseudo_voigt_asymmetric(x, x0, a, sigma, alpha, beta, m):
+    '''
+    Calculates the Asymmetric Pseudo-Voigt Profile.
+    
+    Parameters
+    ----------
+    x : array_like
+        Input value.
+    x0 : float
+         Peak center position.
+    a : float
+        Normalization constant, peak value.
+    sigma : float
+            This is actually the full width at half maximum (FWHM) in the symmetric case.
+    alpha : float
+            Asymmetry parameter. Controls how the FWHM varies sigmoidally.
+    beta : float
+           Displacement of the sigmoidal step relative to the peak.
+    m : float
+        Fraction of Lorentzian character contributing to the net line shape. When f = 1,
+        the shape is a pure Lorentzian. When f = 0, the shape is a pure Gaussian.
+    
+    Returns
+    -------
+    pseudov_asymmetric : array_like
+                          Asymmetric Pseudo-Voigt Profile
+    
+    References
+    ----------
+    [1]: Aaron L. Stancik and Eric B. Brauns, "A simple asymmetric lineshape for fitting
+    infrared absorption spectra", Vibrational Spectroscopy, Volume 47, Issue 1, 2008,
+    Pages 66-69. https://doi.org/10.1016/j.vibspec.2008.02.009 \n
+    [2]: Schmid, M., Steinrück, H.-P. and Gottfried, J.M. (2014), "A new asymmetric Pseudo-Voigt
+    function for more efficient fitting of XPS lines", Surf. Interface Anal., 46: 505-511.
+    https://doi.org/10.1002/sia.5521
+    '''
     
     ln2 = np.log(2)
     pi = np.pi
@@ -258,7 +293,8 @@ def pseudo_voigt_asymmetric(x, x0, a, sigma, alpha, beta, m):
     sigma_x = 2*sigma / (1 + np.exp(-alpha * (x - beta)))
     term1  = (1-m) * np.sqrt( 4 * ln2 / (pi * sigma_x**2) )
     term1 *= np.exp( -(4 * ln2 / sigma_x**2) * x**2 )
-    term2  = (m / (2 * pi)) * sigma_x / ( (sigma_x/2)**2 + 4*x**2 )
+    # term2  = (m / (2 * pi)) * sigma_x / ( (sigma_x/2)**2 + 4*x**2 )
+    term2 = (m / (pi * sigma_x)) / (1 + 4 * (x/sigma_x)**2)
     pseudov_asymmetric = term1 + term2
     pseudov_asymmetric *= a / np.max(pseudov_asymmetric)
     return pseudov_asymmetric
