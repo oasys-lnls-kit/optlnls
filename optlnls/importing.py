@@ -129,7 +129,7 @@ def read_spectra_brilliance_file(filename):
     return data
     
 
-def read_spectra_xyz(filename):
+def read_spectra_xyz(filename, skip_header=2):
     """
     
 
@@ -146,7 +146,7 @@ def read_spectra_xyz(filename):
 
     """
         
-    data = np.genfromtxt(filename, skip_header=2)
+    data = np.genfromtxt(filename, skip_header=skip_header)
 
     X = data[:,0]
     Y = data[:,1]
