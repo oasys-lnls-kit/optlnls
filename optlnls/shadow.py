@@ -299,14 +299,14 @@ def append_dataset_hdf5(filename, data, z, nz, tag, t0, ndigits):
             dset.attrs['fwhm_h_shadow'] = data['fwhm_h']
             dset.attrs['center_h_shadow'] = (data['fwhm_coordinates_h'][0] + data['fwhm_coordinates_h'][1]) / 2.0
         except:
-            print('CAUSTIC WARNING: FWHM X could not be calculated by Shadow at z position = {0:.3f}'.format(z[0]))
+            print('CAUSTIC WARNING: FWHM X could not be calculated by Shadow at z position = {0:.3f}'.format(z))
             dset.attrs['fwhm_h_shadow'] = np.nan
             dset.attrs['center_h_shadow'] = np.nan
         try:
             dset.attrs['fwhm_v_shadow'] = data['fwhm_v']
             dset.attrs['center_v_shadow'] = (data['fwhm_coordinates_v'][0] + data['fwhm_coordinates_v'][1]) / 2.0
         except:
-            print('CAUSTIC WARNING: FWHM Y could not be calculated by Shadow at z position = {0:.3f}'.format(z[0]))
+            print('CAUSTIC WARNING: FWHM Y could not be calculated by Shadow at z position = {0:.3f}'.format(z))
             dset.attrs['fwhm_v_shadow'] = np.nan
             dset.attrs['center_v_shadow'] = np.nan
             
