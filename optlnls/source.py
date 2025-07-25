@@ -6,7 +6,6 @@ Created on Sat Mar 21 15:26:15 2020
 @author: sergio.lordano
 """
 
-import numpy
 import numpy as np
 from matplotlib import pyplot as plt
 import scipy.special as spc
@@ -17,6 +16,12 @@ from scipy.special import kv
 from scipy.integrate import quad
 import scipy.constants as codata
 
+try:
+    from srwlib import SRWLMagFldU, SRWLMagFld3D, SRWLMagFldH, SRWLPartBeam, SRWLStokes
+except ImportError:
+    from srwpy.srwlib import SRWLMagFldU, SRWLMagFld3D, SRWLMagFldH, SRWLPartBeam, SRWLStokes
+
+from srwlpy import CalcStokesUR
 
 def get_k(Period, what_harmonic, Energy, k_ext):
     E = 3.0e9; e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
@@ -84,8 +89,6 @@ def srw_undulator_spectrum(mag_field=[], electron_beam=[], energy_grid=[], sampl
     :precision: list containing: [h_max: maximum harmonic number to take into account, longitudinal precision factor, azimuthal precision factor (1 is standard, >1 is more accurate]
     """    
 
-    from srwlib import SRWLMagFldU, SRWLMagFldH, SRWLPartBeam, SRWLStokes
-    from srwlpy import CalcStokesUR
     from numpy import array as nparray
 
     #***********Undulator
@@ -150,7 +153,6 @@ def AuxReadInMagFld3D(filePath, sCom):
     """Function from SRW examples"""
     
     from array import array
-    from srwlib import SRWLMagFld3D
     
     f = open(filePath, 'r')
     f.readline() #1st line: just pass
@@ -202,9 +204,9 @@ def BM_spectrum(E, I, B, ph_energy, hor_acc_mrad=1.0):
         
     e_c = 665*(E**2)*B # eV
     y = ph_energy/e_c
-    int_K53 = numpy.zeros((len(y)))
+    int_K53 = np.zeros((len(y)))
     for i in range(len(y)):
-        int_K53[i] = quad(lambda x: kv(5.0/3.0, x), y[i], numpy.inf)[0]
+        int_K53[i] = quad(lambda x: kv(5.0/3.0, x), y[i], np.inf)[0]
     G1_y = y*int_K53
     BM_Flux = (2.457*1e13)*E*I*G1_y*hor_acc_mrad
     
@@ -228,9 +230,9 @@ def Wiggler_spectrum(E, I, B, N_periods, ph_energy, hor_acc_mrad=1.0):
             
         e_c = 665*(E**2)*B # eV
         y = ph_energy/e_c
-        int_K53 = numpy.zeros((len(y)))
+        int_K53 = np.zeros((len(y)))
         for i in range(len(y)):
-            int_K53[i] = quad(lambda x: kv(5.0/3.0, x), y[i], numpy.inf)[0]
+            int_K53[i] = quad(lambda x: kv(5.0/3.0, x), y[i], np.inf)[0]
         G1_y = y*int_K53
         W_Flux = (2.457*1e13)*E*I*G1_y*hor_acc_mrad*(2*N_periods)
         
@@ -251,12 +253,12 @@ def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3]
     :e_beam_vert_div: electron beam vertical divergence sigma [rad]. Not taken into account if equal to None.
     :plot: boolean: True or False if you want the distribution to be shown.
     """
-    import numpy
+    
     from scipy.special import kv
     from scipy.integrate import simps
     
     def gaussian_pdf(x, x0, sigma): # gaussian probability density function (PDF)
-        return (1/(numpy.sqrt(2*numpy.pi*sigma**2)))*numpy.exp(-(x-x0)**2/(2*sigma**2))
+        return (1/(np.sqrt(2*np.pi*sigma**2)))*np.exp(-(x-x0)**2/(2*sigma**2))
     
     def calc_vert_dist(e_relative):
         G = (e_relative/2.0)*(gamma_psi**(1.5))    
@@ -269,7 +271,7 @@ def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3]
         return dN_dOmega
     
     if(not(hasattr(ph_energy, "__len__"))): # for single energies
-        ph_energy = numpy.array([ph_energy])
+        ph_energy = np.array([ph_energy])
     
     I = 0.1 # [A] -> result independent
     gamma = E/0.51099890221e-03
@@ -277,22 +279,22 @@ def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3]
     energy_relative = ph_energy/e_c
     
     # calculate graussian approximation to define psi mesh
-    int_K53 = quad(lambda x: kv(5.0/3.0, x), energy_relative[0], numpy.inf)[0]
+    int_K53 = quad(lambda x: kv(5.0/3.0, x), energy_relative[0], np.inf)[0]
     K23 = kv(2.0/3.0, energy_relative[0]/2)
-    vert_angle_sigma = numpy.sqrt(2*numpy.pi/3)/(gamma*energy_relative[0])*int_K53/((K23)**2)
+    vert_angle_sigma = np.sqrt(2*np.pi/3)/(gamma*energy_relative[0])*int_K53/((K23)**2)
     if(e_beam_vert_div > 0.0):
-        vert_angle_sigma = numpy.sqrt(vert_angle_sigma**2 + e_beam_vert_div**2) # calculates gaussian PDF of the e-beam vertical divergence
+        vert_angle_sigma = np.sqrt(vert_angle_sigma**2 + e_beam_vert_div**2) # calculates gaussian PDF of the e-beam vertical divergence
     
-    psi = numpy.linspace(-vert_angle_sigma*2, vert_angle_sigma*2, 1000) # vertical angle array
+    psi = np.linspace(-vert_angle_sigma*2, vert_angle_sigma*2, 1000) # vertical angle array
     gamma_psi = 1 + (gamma**2) * (psi**2) # factor dependent on gamma and psi
-    psi_minus = numpy.abs(psi - div_limits[0]).argmin() # first psi limit index
-    psi_plus = numpy.abs(psi - div_limits[1]).argmin() # second psi limit index
+    psi_minus = np.abs(psi - div_limits[0]).argmin() # first psi limit index
+    psi_plus = np.abs(psi - div_limits[1]).argmin() # second psi limit index
     
-    vert_pdf = numpy.zeros((len(ph_energy), len(psi)))
-    vert_acceptance = numpy.zeros((len(ph_energy)))
-    lwhm = numpy.zeros((len(ph_energy)))
-    rwhm = numpy.zeros((len(ph_energy)))
-    fwhm = numpy.zeros((len(ph_energy)))
+    vert_pdf = np.zeros((len(ph_energy), len(psi)))
+    vert_acceptance = np.zeros((len(ph_energy)))
+    lwhm = np.zeros((len(ph_energy)))
+    rwhm = np.zeros((len(ph_energy)))
+    fwhm = np.zeros((len(ph_energy)))
     
     if(e_beam_vert_div > 0.0):
         e_beam_pdf = gaussian_pdf(psi, 0, e_beam_vert_div) # calculates gaussian PDF of the e-beam vertical divergence
@@ -303,17 +305,17 @@ def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3]
         
         if(e_beam_vert_div > 0.0): # convolves radiation and e-beam angular distributions
             
-            conv_dist = numpy.convolve(vert_pdf[i], e_beam_pdf, mode='same')
+            conv_dist = np.convolve(vert_pdf[i], e_beam_pdf, mode='same')
             conv_dist_norm = simps(y=conv_dist, x=psi)
             conv_pdf = conv_dist / conv_dist_norm # convolved PDF
             vert_pdf[i] = conv_pdf
             
         vert_acceptance[i] = simps(vert_pdf[i][psi_minus:psi_plus+1], x=psi[psi_minus:psi_plus+1])
         # calculates FWHM 
-        peak = numpy.max(vert_pdf[i])
-        peak_idx = numpy.abs(vert_pdf[i]-peak).argmin()
-        lwhm[i] = psi[numpy.abs(vert_pdf[i][:peak_idx] - peak/2).argmin()]
-        rwhm[i] = psi[numpy.abs(vert_pdf[i][peak_idx:] - peak/2).argmin() + peak_idx]
+        peak = np.max(vert_pdf[i])
+        peak_idx = np.abs(vert_pdf[i]-peak).argmin()
+        lwhm[i] = psi[np.abs(vert_pdf[i][:peak_idx] - peak/2).argmin()]
+        rwhm[i] = psi[np.abs(vert_pdf[i][peak_idx:] - peak/2).argmin() + peak_idx]
         fwhm[i] = rwhm[i] - lwhm[i]
 
    
@@ -323,8 +325,8 @@ def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3]
         plt.plot(psi*1e3, vert_pdf[0], 'C0.-')
         plt.ylabel('$Flux \ PDF$')
         plt.xlabel('$\psi \ [mrad]$')
-        plt.ylim(0, numpy.max(vert_pdf)*1.1)
-        plt.fill_between(psi*1e3, vert_pdf[i], where=numpy.logical_and(psi>=psi[psi_minus], psi<=psi[psi_plus]))
+        plt.ylim(0, np.max(vert_pdf)*1.1)
+        plt.fill_between(psi*1e3, vert_pdf[i], where=np.logical_and(psi>=psi[psi_minus], psi<=psi[psi_plus]))
         plt.axvline(x=psi[psi_minus]*1e3)
         plt.axvline(x=psi[psi_plus]*1e3)
         plt.plot(lwhm*1e3, peak/2, 'C1+', markersize=12)
