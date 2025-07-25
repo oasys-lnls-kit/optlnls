@@ -15,7 +15,7 @@ pip install twine
 Update the version number in `setup.py`.   
 Then, on the root directory of the project, build and upload a new version to PyPI:
 ```
-rm -rf dist/*
+rm -fR dist/*
 python3 setup.py sdist
 python3 -m twine upload dist/*
 ```
