@@ -153,8 +153,8 @@ def read_RefractiveIndexInfo(filename, wl_range=[0,0]):
 	
 def fresnel_reflectivity(n1, n2, theta_surface_deg, complex_coeff=False):
     
-    n1 = n1.astype(np.complex) if isinstance(n1, (np.ndarray)) else complex(n1)
-    n2 = n2.astype(np.complex) if isinstance(n2, (np.ndarray)) else complex(n2)
+    n1 = n1.astype(np.complex_) if isinstance(n1, (np.ndarray)) else complex(n1)
+    n2 = n2.astype(np.complex_) if isinstance(n2, (np.ndarray)) else complex(n2)
 
     θi = np.deg2rad(90-theta_surface_deg) # incidence angle (radians)
     θt = np.arcsin(n1/n2*np.sin(θi)) # refraction angle (radians)
