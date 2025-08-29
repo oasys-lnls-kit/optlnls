@@ -7,12 +7,17 @@ Created on Thu Jul  9 11:09:54 2020
 
 
 """
-import numpy as np
-from scipy.optimize import curve_fit
-from optlnls.constants import * 
-from matplotlib import pyplot as plt
 import pickle
 
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy.optimize import curve_fit
+
+from optlnls.constants import *
+
+
+def teste():
+    return None
 
 def wrap_phase(phase_2D, phase_shift=1.0):
     wrapped_phase = (phase_2D + pi - phase_shift) % (2*pi) 
