@@ -153,8 +153,8 @@ def read_RefractiveIndexInfo(filename, wl_range=[0,0]):
 	
 def fresnel_reflectivity(n1, n2, theta_surface_deg, complex_coeff=False):
     
-    n1 = n1.astype(np.complex_) if isinstance(n1, (np.ndarray)) else complex(n1)
-    n2 = n2.astype(np.complex_) if isinstance(n2, (np.ndarray)) else complex(n2)
+    #n1 = n1.astype(np.complex_) if isinstance(n1, (np.ndarray)) else complex(n1)
+    #n2 = n2.astype(np.complex_) if isinstance(n2, (np.ndarray)) else complex(n2)
 
     θi = np.deg2rad(90-theta_surface_deg) # incidence angle (radians)
     θt = np.arcsin(n1/n2*np.sin(θi)) # refraction angle (radians)
@@ -489,16 +489,16 @@ def reflectivity(energy_eV, density_gcm3, compound_str, theta_surface_rad):
         
         for energy in energy_eV:
             
-            n_list.append(xraylib.Refractive_Index(compound_str, energy/1000, density_gcm3))
+            n_list.append(complex(xraylib.Refractive_Index(compound_str, energy/1000, density_gcm3)))
             
         n = np.array(n_list)
         
     else:
         
-        n = xraylib.Refractive_Index(compound_str, energy_eV/1000, density_gcm3)
+        n = complex(xraylib.Refractive_Index(compound_str, energy_eV/1000, density_gcm3))
         
     
-    Rs, Rp, Runpol = fresnel_reflectivity(n1=1, n2=n, theta_surface_deg=np.rad2deg(theta_surface_rad))
+    Rs, Rp, Runpol = fresnel_reflectivity(n1=complex(1), n2=n, theta_surface_deg=np.rad2deg(theta_surface_rad))
     
     return Rs, Rp, Runpol
 
