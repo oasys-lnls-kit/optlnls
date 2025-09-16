@@ -105,7 +105,10 @@ def SRW_figure_error(file_name, unit_factor, angle_in, angle_out, orientation_x_
     :L: total mirror length in which the matrix must be cropped 
     :W: total mirror width in which the matrix must be cropped
     """
-    from srwlib import srwl_opt_setup_surf_height_2d
+    try:
+        from srwlib import srwl_opt_setup_surf_height_2d
+    except:
+        from srwpy.srwlib import srwl_opt_setup_surf_height_2d
 
     
     height2D = from_shadow_to_matrix(file_name, unit_factor)
