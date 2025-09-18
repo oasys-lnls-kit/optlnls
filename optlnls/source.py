@@ -11,7 +11,12 @@ from matplotlib import pyplot as plt
 import scipy.special as spc
 
 from scipy.interpolate import interp1d
-from scipy.integrate import simps
+
+try:
+    from scipy.integrate import simps
+except ImportError:
+    from scipy.integrate import simpson as simps
+
 from scipy.special import kv
 from scipy.integrate import quad
 import scipy.constants as codata
@@ -258,7 +263,6 @@ def BM_vertical_acc(E=3.0, B=3.2, ph_energy=1915.2, div_limits=[-1.0e-3, 1.0e-3]
     """
     
     from scipy.special import kv
-    from scipy.integrate import simps
     
     def gaussian_pdf(x, x0, sigma): # gaussian probability density function (PDF)
         return (1/(np.sqrt(2*np.pi*sigma**2)))*np.exp(-(x-x0)**2/(2*sigma**2))
