@@ -21,7 +21,10 @@ try:
 except ImportError:
     from srwpy.srwlib import SRWLMagFldU, SRWLMagFld3D, SRWLMagFldH, SRWLPartBeam, SRWLStokes
 
-from srwlpy import CalcStokesUR
+try:
+    from srwlpy import CalcStokesUR
+except ImportError:
+    from srwpy.srwlpy import CalcStokesUR
 
 def get_k(Period, what_harmonic, Energy, k_ext):
     E = 3.0e9; e = 1.60217662e-19; m_e = 9.10938356e-31; pi = 3.141592654; c = 299792458; h_cut = 6.58211915e-16;
