@@ -130,6 +130,7 @@ def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder='',
     
     # === CREATES SUBFOLDERS === #
     if(workingFolder != ''):
+        original_dir = os.getcwd()
         os.chdir(workingFolder)
         
     if not (os.path.exists('2D')): os.mkdir('2D')
@@ -314,6 +315,9 @@ def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder='',
             
         else:
             plt.close('all')            
+
+    # Change back to original directory
+    os.chdir(original_dir)
 
     if return_stats:
         return meridional_stats, sagittal_stats       
