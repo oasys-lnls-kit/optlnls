@@ -120,7 +120,8 @@ def SRW_figure_error(file_name, unit_factor, angle_in, angle_out, orientation_x_
         return srwl_opt_setup_surf_height_2d(height2D, orientation_x_or_y, angle_in, angle_out)
     
     
-def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder=''):
+def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder='',
+                         return_stats: bool = False):
     
     import os
     from optlnls.math import derivate_keeping_size, psd 
@@ -137,6 +138,8 @@ def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder='')
     if not (os.path.exists('PSD')): os.mkdir('PSD')
     if not (os.path.exists('statistics')): os.mkdir('statistics')         
     
+    meridional_stats = []
+    sagittal_stats = []
     
     for slopefile in filelist:
         
@@ -162,7 +165,9 @@ def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder='')
         mer_cut_slope = derivate_keeping_size(X, mer_cut)
         PV_mer_cut = (np.max(mer_cut)-np.min(mer_cut))*1e9
         std_height = np.std(mer_cut)*1e9
-        std_slope = np.std(mer_cut_slope)*1e6 
+        std_slope = np.std(mer_cut_slope)*1e6
+
+        meridional_stats.append([std_height, PV_mer_cut, std_slope])
         
         PSD, frequencies = psd(X, mer_cut)
     
@@ -186,6 +191,8 @@ def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder='')
         PV_sag_cut = (np.max(sag_cut)-np.min(sag_cut))*1e9
         std_height_sag = np.std(sag_cut)*1e9
         std_slope_sag = np.std(sag_cut_slope)*1e6
+
+        sagittal_stats.append([std_height_sag, PV_sag_cut, std_slope_sag])
         
         sag_errors = []
         for i in [-2, -1, 0, +1, +2]:
@@ -307,6 +314,9 @@ def analyze_height_error(filelist, unit_factor, plotting=True, workingFolder='')
             
         else:
             plt.close('all')            
+
+    if return_stats:
+        return meridional_stats, sagittal_stats       
         
 
 def calc_errors(axis, heights, coordinate_value=0):

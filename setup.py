@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="optlnls",
-    version="0.3.24",
+    version="0.3.25",
     author="Sergio Lordano, Artur Pinto, Humberto Rigamonti Jr, LNLS OPT team",
     author_email="sergiolordano2@gmail.com",
     description="X-ray optics utilities",
