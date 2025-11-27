@@ -175,17 +175,17 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
     """
 
     # HANDLE UNITS
-    if(units == 0): # [mm]
+    if(units == 1): # [mm]
         unitFactorX = 1
         unitFactorY = 1
         unitLabel = ' [mm]'
         
-    elif(units == 1): # [um]
+    elif(units == 2): # [um]
         unitFactorX = 1e3
         unitFactorY = 1e3
         unitLabel = ' [$\mu$m]'
         
-    elif(units == 2): # [nm]
+    elif(units == 3): # [nm]
         unitFactorX = 1e6
         unitFactorY = 1e6
         unitLabel = ' [nm]'
