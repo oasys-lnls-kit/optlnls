@@ -87,7 +87,8 @@ def und_source(emittance, beta, e_spread, und_length, und_period, ph_energy, har
     return sph_h, sphp_h
 
 
-def srw_undulator_spectrum(mag_field=[], electron_beam=[], energy_grid=[], sampling_mesh=[], precision=[]):
+def srw_undulator_spectrum(mag_field=[], electron_beam=[], energy_grid=[], sampling_mesh=[], precision=[],
+                           verbose: bool = True):
     """
     Calls SRW to calculate spectrum for a planar or elliptical undulator\n
     :mag_field: list containing: [period [m], length [m], Bx [T], By [T], phase Bx = 0, phase By = 0, Symmetry Bx = +1, Symmetry By = -1]
@@ -148,9 +149,10 @@ def srw_undulator_spectrum(mag_field=[], electron_beam=[], energy_grid=[], sampl
            
     
     #**********************Calculation (SRWLIB function calls)
-    print('   Performing Spectral Flux (Stokes parameters) calculation ... ')
+    if verbose:
+        print('   Performing Spectral Flux (Stokes parameters) calculation ... ')
     CalcStokesUR(stkF, eBeam, und, arPrecF)
-    print('done')
+    if verbose: print('done')
     
     return nparray(stkF.arS[0:energy_grid[2]])
 
