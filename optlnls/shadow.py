@@ -74,7 +74,7 @@ def calc_und_flux(beam, nbins, eBeamEnergy, eSpread, current,
     precision = [min_harmonic, max_harmonic, 1.0, 1.0]   
     
     
-    und_spec = srw_undulator_spectrum(mag_field, electron_beam, energy_grid, sampling_mesh, precision)   
+    und_spec = srw_undulator_spectrum(mag_field, electron_beam, energy_grid, sampling_mesh, precision, verbose = verbose)   
     BL_spec = und_spec*T_E
     
     if(show_plots):
