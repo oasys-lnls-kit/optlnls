@@ -278,7 +278,7 @@ def append_dataset_hdf5(filename, data, z, nz, tag, t0, ndigits):
     
     with h5py.File(filename, 'a') as f:
         dset = f['datasets'].create_dataset('step_{0:0{ndigits}d}'.format(tag, ndigits=ndigits),
-                                            data=np.array(data['histogram'], dtype=np.float), 
+                                            data=np.array(data['histogram'], dtype=float), 
                                             compression="gzip")
         dset.attrs['z'] = z 
         dset.attrs['xStart'] = data['bin_h_center'].min()
@@ -436,8 +436,8 @@ def read_caustic(filename, write_attributes=False, plot=False, plot2D=False,
             for key in list(outdict.keys()):
                 f.attrs[key] = outdict[key]
                 
-            f.create_dataset('histoXZ', data=histoH, dtype=np.float, compression="gzip")
-            f.create_dataset('histoYZ', data=histoV, dtype=np.float, compression="gzip")
+            f.create_dataset('histoXZ', data=histoH, dtype=float, compression="gzip")
+            f.create_dataset('histoYZ', data=histoV, dtype=float, compression="gzip")
             
     if(print_minimum):
         print('\n   ****** \n' + '   Z min (rms-hor): {0:.3e}'.format(rms_min_z[0]))
