@@ -114,7 +114,7 @@ def read_RefractiveIndexInfo(filename, wl_range=[0,0]):
         for line in lines:
             line = line.split(',')
             try:
-                line = np.array(line, dtype=np.float)
+                line = np.array(line, dtype=float)
                 if(j==1): 
                     n.append(line.tolist())
                 else:
