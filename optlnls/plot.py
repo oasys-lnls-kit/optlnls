@@ -37,11 +37,12 @@ def beam_integral(mtx):
     return np.sum(mtx[1:,1:])*px*py
 
 def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, textA=0, textB=0, textC=0, textD=0, fitType=0, 
-                     overSampling=200.0, fwhm_zeroPadding=0, unitFactor=1e3, xlabel='X', ylabel='Y', zlabel='', units=2, plot_title='', 
+                     overSampling=200.0, fwhm_zeroPadding=0, unitFactor=None, unitFactorX=1e3, unitFactorY=1e3, xlabel='X', ylabel='Y', zlabel='ph/s/0.1%/', units=2, plot_title='', 
                      invertXY=False, scale=0, fwhm_threshold=0.5, fwhm_int_ext=1, show_colorbar=0, z_min_factor=0,
                      x_cut_pos=0.0, y_cut_pos=0.0, x_range = 0, y_range = 0, cmap='jet', grid=1, integral=0, peak_density=0,
                      x_range_min=-0.25, x_range_max=0.25, y_range_min=-0.25, y_range_max=0.25, z_range_min=float('NaN'), z_range_max=float('NaN'),
-                     zero_pad_x=0, zero_pad_y=0, export_slices=0, isdensity=1, savgol=[11,4]):
+                     zero_pad_x=0, zero_pad_y=0, export_slices=0, isdensity=1, savgol=[11,4],
+                     figure=None, ax2D=None, axX=None, axY=None, axT=None):
     """
     
 
@@ -96,10 +97,12 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
         The default is 0 (don't fit).
     overSampling : float, optional
         multiplication factor for slice number of points for FWHM. The default is 200.0.
-    plot_zeroPadding : float, optional
-        multiplication factor for the matrix window size. The default is 0.
     unitFactor : float, optional
-        multiplication factor for changing units. The default is 1e3.
+        multiplication factor for changing units in both axes. The default is None.
+    unitFactorX : float, optional
+        multiplication factor for changing units in horizontal axis. The default is 1e3.
+    unitFactorY : float, optional
+        multiplication factor for changing units in vertical axis. The default is 1e3.
     xlabel : str, optional
         horizontal axis label. The default is 'X'.
     ylabel : str, optional
@@ -149,6 +152,20 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
         DESCRIPTION. The default is -0.25.
     y_range_max : float, optional
         DESCRIPTION. The default is 0.25.
+    zero_pad_x : int, optional
+        DESCRIPTION. Zero padding in x direction. The default is 0.
+    zero_pad_z : int, optional
+        DESCRIPTION. Zero padding in z direction. The default is 0.
+    figure: matplotlib.figure.Figure, optional
+        DESCRIPTION. The default is None.
+    ax2D: matplotlib.axes.Axes, optional
+        DESCRIPTION. The default is None.
+    axX: matplotlib.axes.Axes, optional
+        DESCRIPTION. The default is None.
+    axY: matplotlib.axes.Axes, optional
+        DESCRIPTION. The default is None.
+    axT: matplotlib.axes.Axes, optional
+        DESCRIPTION. The default is None.
 
     Returns
     -------
@@ -159,36 +176,42 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
 
     # HANDLE UNITS
     if(units == 1): # [mm]
-        unitFactor = 1
-        unitLabel = 'mm'
+        unitFactorX = 1
+        unitFactorY = 1
+        unitLabel = ' [mm]'
         
     elif(units == 2): # [um]
-        unitFactor = 1e3
-        unitLabel = '$\mu$m'
+        unitFactorX = 1e3
+        unitFactorY = 1e3
+        unitLabel = ' [$\mu$m]'
         
-    elif(units == 3): # [um]
-        unitFactor = 1e6
-        unitLabel = 'nm'
+    elif(units == 3): # [nm]
+        unitFactorX = 1e6
+        unitFactorY = 1e6
+        unitLabel = ' [nm]'
         
     else:
         unitLabel = units # units is a string in this case
+        if unitFactor is not None:
+            unitFactorX = unitFactor
+            unitFactorY = unitFactor
     
     if(zero_pad_x != 0 or zero_pad_y != 0 ):
         beam2D = zero_padding(beam2D, zero_pad_x, zero_pad_y)
     
     # TRADE X and Y axes if needed
     if(invertXY):        
-        z_axis = beam2D[0,1:]*unitFactor
-        x_axis = beam2D[1:,0]*unitFactor
+        z_axis = beam2D[0,1:]*unitFactorY
+        x_axis = beam2D[1:,0]*unitFactorX
         xz = np.array(beam2D[1:,1:]).transpose()
             
     else:       
-        z_axis = beam2D[1:,0]*unitFactor
-        x_axis = beam2D[0,1:]*unitFactor
+        z_axis = beam2D[1:,0]*unitFactorY
+        x_axis = beam2D[0,1:]*unitFactorX
         xz = np.array(beam2D[1:,1:])
         
     if(isdensity):
-        xz = xz / unitFactor**2
+        xz = xz / (unitFactorX * unitFactorY)
 
     # NORMALIZE TO PEAK DENSITY
     if(peak_density < 0):
@@ -345,33 +368,34 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
 
     
     # =============== PLOT =============== #
-    
-        
-    ### CREATE PLOT CANVAS
-    figure = plt.figure() #Figure()
-    #figure.patch.set_facecolor('white')
-    #plot_canvas = FigureCanvasQTAgg(figure)
-#    image_box.layout().addWidget(plot_canvas)
-    figure.set_size_inches((6.2,5.96))
-    
-    #Parâmetros dos eixos
     fontsize = 12
-    space = 0.02
     LTborder = 0.04
+    space = 0.02
     RBborder = 0.15
     X_or_Y = 0.28 
     width_main = 1 - RBborder - LTborder - X_or_Y - space
-    
-    rect_2D = [LTborder + X_or_Y + space, RBborder, width_main, width_main] #2D
-    rect_X =  [LTborder + X_or_Y + space, RBborder + width_main + space, width_main, X_or_Y]
-    rect_Y =  [LTborder, RBborder, X_or_Y, width_main]
-    rect_T =  [LTborder, RBborder + width_main + space, X_or_Y, X_or_Y] #Text box
-    
-    #Criação dos quatro eixos
-    ax2D = figure.add_axes(rect_2D)
-    axX  = figure.add_axes(rect_X, sharex=ax2D)
-    axY  = figure.add_axes(rect_Y, sharey=ax2D)
-    axT  = figure.add_axes(rect_T)
+
+    created_figure = figure is None
+
+    if created_figure:
+        figure = plt.figure() 
+        figure.set_size_inches((6.2,5.96))
+
+        rect_2D = [LTborder + X_or_Y + space, RBborder, width_main, width_main]
+        rect_X =  [LTborder + X_or_Y + space, RBborder + width_main + space, width_main, X_or_Y]
+        rect_Y =  [LTborder, RBborder, X_or_Y, width_main]
+        rect_T =  [LTborder, RBborder + width_main + space, X_or_Y, X_or_Y]
+        
+        ax2D = figure.add_axes(rect_2D)
+        axX  = figure.add_axes(rect_X, sharex=ax2D)
+        axY  = figure.add_axes(rect_Y, sharey=ax2D)
+        axT  = figure.add_axes(rect_T)
+        
+    else:
+        ax2D.clear()
+        axX.clear()
+        axY.clear()
+        axT.clear()
 
     hor_label = 'X'
     vert_label = 'Y'
@@ -422,22 +446,20 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
         axX.text(1.0, 1.03, 'x10$^{%s}$' % str(expoX), fontsize=fontsize-1, transform=axX.transAxes)
     if(offsetFactorZ > 1):
         axY.text(0.0, -0.13, 'x10$^{%s}$' % str(expoZ), fontsize=fontsize-1, transform=axY.transAxes)        
-    
-
 
     if(grid):
         axX.grid(which='both', alpha=0.2, linewidth=0.3)
         axY.grid(which='both', alpha=0.2, linewidth=0.3)
     
     # Write Labels
-    ax2D.set_xlabel(xlabel + ' [' + unitLabel + ']', fontsize=fontsize)
-    ax2D.set_ylabel(ylabel + ' [' + unitLabel + ']', fontsize=fontsize)
+    ax2D.set_xlabel(xlabel + unitLabel, fontsize=fontsize)
+    ax2D.set_ylabel(ylabel + unitLabel, fontsize=fontsize)
 
     if ((x_cut.min() >= 0) & (z_cut.min() >= 0)):
-        if((cut == 0) & (zlabel == '')):
-            zlabel = 'ph/s/0.1%/' + unitLabel
-        elif((cut > 0) & (zlabel == '')):
-            zlabel = 'ph/s/0.1%/' + unitLabel + '$^2$'
+        if((cut == 0) & (zlabel == 'ph/s/0.1%/')):
+            zlabel += unitLabel[2:-1]
+        elif((cut > 0) & (zlabel == 'ph/s/0.1%/')):
+            zlabel += unitLabel[2:-1] + '$^2$'
     	
         axX.set_ylabel(zlabel, fontsize=fontsize)
 
@@ -498,20 +520,17 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
                
     
     if(x_range != 0):
-        ax2D.set_xlim(x_range_min*unitFactor, x_range_max*unitFactor)
-        axX.set_xlim(x_range_min*unitFactor, x_range_max*unitFactor)
+        ax2D.set_xlim(x_range_min*unitFactorX, x_range_max*unitFactorX)
+        axX.set_xlim(x_range_min*unitFactorX, x_range_max*unitFactorX)
     else:
         ax2D.set_xlim(x_axis[0],x_axis[-1])
     
     if(y_range != 0):
-        ax2D.set_ylim(y_range_min*unitFactor, y_range_max*unitFactor)
-        axY.set_ylim(y_range_min*unitFactor, y_range_max*unitFactor)
+        ax2D.set_ylim(y_range_min*unitFactorY, y_range_max*unitFactorY)
+        axY.set_ylim(y_range_min*unitFactorY, y_range_max*unitFactorY)
     else:
         ax2D.set_ylim(z_axis[0],z_axis[-1])
     
-    
-            
-
     #TITLE
     if(len(plot_title) <= 25):
         text1 = plot_title
@@ -606,9 +625,9 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
     if(outfilename != ''):
         figure.savefig(outfilename, dpi=400, transparent=False)
 
-    if(show_plot):
+    if show_plot and created_figure:
         plt.show()
-    else:
+    elif created_figure:
         plt.close()
         		
         #########################################################################
@@ -627,6 +646,9 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
               'cut_coord_z': z_cut_coord,
               'peak_value': xz_max,
               'min_value': xz_min,
+              'x_axis': x_axis,
+              'z_axis': z_axis,     
+              'xz': xz
               }
     
     if(fitType != 0):
@@ -636,8 +658,7 @@ def plot_beam(beam2D, show_plot=True, outfilename='', outfileext='png', cut=0, t
         output['fit_fwhm_z'] = z_cut_fit_fwhm[0]           
         output['fit_fwhm_x_coords'] = x_cut_fit_fwhm[1:]
         output['fit_fwhm_z_coords'] = z_cut_fit_fwhm[1:]
-
-
+        
     return output
 
 			
@@ -752,9 +773,6 @@ def plot_xy_list(x, y, fmts=[], labels=[], xlabel='', ylabel='', title='',
         plt.show()
     
     return fig, ax
-
-#plot_beam()
-
 
 
 
