@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from typing import Tuple
+from numpy.typing import NDArray
 
 # Functions:
 
@@ -368,7 +369,22 @@ def calc_rocking_curve_shift(crystal='Si', energy=8, h=1, k=1, l=1, rel_angle=1,
     return w0
 
     
-def calc_Darwin_curve(delta_theta=np.linspace(-0.00015, 0.00015, 5000), crystal='Si', energy=8, h=1, k=1, l=1, rel_angle=1, debye_temp_factor=1, use_correction=True, save_txt=True, save_fig=True, filename_to_save='Darwin_curve'):
+def calc_Darwin_curve(delta_theta: NDArray[np.float64] = np.linspace(-0.00015, 0.00015, 5000),
+                      crystal: str = 'Si',
+                      energy: float = 8, h: int = 1, k: int = 1, l: int = 1,
+                      rel_angle: float = 1, debye_temp_factor: float = 1,
+                      use_correction: bool = True, save_txt: bool = True,
+                      plot_fig: bool = True, save_fig: bool = True,
+                      filename_to_save: str = 'Darwin_curve'
+) -> Tuple[
+    NDArray[np.float64],  # delta_theta
+    NDArray[np.float64],  # R
+    float,                # zeta_total
+    float,                # zeta_FWHM
+    float,                # w_total
+    float,                # w_FWHM
+    float                 # w0
+]:
     
     '''
     Calculates the Darwin curve. It does not considers absortion. Valid for s-polarization only.
@@ -499,29 +515,31 @@ def calc_Darwin_curve(delta_theta=np.linspace(-0.00015, 0.00015, 5000), crystal=
                 
             
     # Plotting Graph:
-    
-    plt.figure()
-    plt.plot(delta_theta, R, linewidth=1.8, color='black')
-    plt.fill_between(delta_theta, R, alpha=0.9, color='C0')
-    plt.ylabel('Intensity reflectivity', fontsize=13)
-    plt.xlabel('$\Delta$'+'$\Theta$'+' [rad]', fontsize=13)
-    plt.xscale('linear')
-    plt.yscale('linear')
-    plt.minorticks_on()
-    plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
-    plt.tick_params(which='both', axis='both', direction='in', right=True, top=True, labelsize=12)
-    plt.grid(which='both', alpha=0.2)
-    plt.tight_layout()
-    textstr = '\n'.join((
-    r'$\zeta_{total}=$%.4E' % (zeta_total, ),
-    r'$\zeta_{FWHM}=$%.4E' % (zeta_FWHM, ),
-    r'$\omega_{total}=$%.4E rad' % (w_total, ),
-    r'$\omega_{FWHM}=$%.4E rad' % (w_FWHM, )))
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5) # wheat # gray
-    plt.text(0.05, 0.95, textstr, transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', bbox=props)
-    plt.show()
-    if(save_fig):
-        plt.savefig(filename_to_save+'.png', dpi=600)
+
+    if plot_fig:
+
+        plt.figure()
+        plt.plot(delta_theta, R, linewidth=1.8, color='black')
+        plt.fill_between(delta_theta, R, alpha=0.9, color='C0')
+        plt.ylabel('Intensity reflectivity', fontsize=13)
+        plt.xlabel('$\Delta$'+'$\Theta$'+' [rad]', fontsize=13)
+        plt.xscale('linear')
+        plt.yscale('linear')
+        plt.minorticks_on()
+        plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0))
+        plt.tick_params(which='both', axis='both', direction='in', right=True, top=True, labelsize=12)
+        plt.grid(which='both', alpha=0.2)
+        plt.tight_layout()
+        textstr = '\n'.join((
+        r'$\zeta_{total}=$%.4E' % (zeta_total, ),
+        r'$\zeta_{FWHM}=$%.4E' % (zeta_FWHM, ),
+        r'$\omega_{total}=$%.4E rad' % (w_total, ),
+        r'$\omega_{FWHM}=$%.4E rad' % (w_FWHM, )))
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5) # wheat # gray
+        plt.text(0.05, 0.95, textstr, transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', bbox=props)
+        if(save_fig):
+            plt.savefig(filename_to_save+'.png', dpi=600)
+        plt.show()
     
     
     return delta_theta, R, zeta_total, zeta_FWHM, w_total, w_FWHM, w0
