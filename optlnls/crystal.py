@@ -517,7 +517,7 @@ def calc_Darwin_curve(delta_theta: NDArray[np.float64] = np.linspace(-0.00015, 0
     # Plotting Graph:
 
     if plot_fig:
-        
+
         plt.figure()
         plt.plot(delta_theta, R, linewidth=1.8, color='black')
         plt.fill_between(delta_theta, R, alpha=0.9, color='C0')
@@ -537,9 +537,9 @@ def calc_Darwin_curve(delta_theta: NDArray[np.float64] = np.linspace(-0.00015, 0
         r'$\omega_{FWHM}=$%.4E rad' % (w_FWHM, )))
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5) # wheat # gray
         plt.text(0.05, 0.95, textstr, transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', bbox=props)
-        plt.show()
         if(save_fig):
             plt.savefig(filename_to_save+'.png', dpi=600)
+        plt.show()
     
     
     return delta_theta, R, zeta_total, zeta_FWHM, w_total, w_FWHM, w0
