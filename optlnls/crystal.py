@@ -376,7 +376,7 @@ def calc_Darwin_curve(delta_theta: NDArray[np.float64] = np.linspace(-0.00015, 0
                       use_correction: bool = True, save_txt: bool = True,
                       plot_fig: bool = True, save_fig: bool = True,
                       filename_to_save: str = 'Darwin_curve'
-) -> tuple[
+) -> Tuple[
     NDArray[np.float64],  # delta_theta
     NDArray[np.float64],  # R
     float,                # zeta_total
