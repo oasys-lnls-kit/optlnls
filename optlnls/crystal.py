@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from typing import Tuple
+from numpy.typing import NDArray
 
 # Functions:
 
@@ -368,7 +369,22 @@ def calc_rocking_curve_shift(crystal='Si', energy=8, h=1, k=1, l=1, rel_angle=1,
     return w0
 
     
-def calc_Darwin_curve(delta_theta=np.linspace(-0.00015, 0.00015, 5000), crystal='Si', energy=8, h=1, k=1, l=1, rel_angle=1, debye_temp_factor=1, use_correction=True, save_txt=True, save_fig=True, filename_to_save='Darwin_curve'):
+def calc_Darwin_curve(delta_theta: NDArray[np.float64] = np.linspace(-0.00015, 0.00015, 5000),
+                      crystal: str = 'Si',
+                      energy: float = 8, h: int = 1, k: int = 1, l: int = 1,
+                      rel_angle: float = 1, debye_temp_factor: float = 1,
+                      use_correction: bool = True,
+                      save_txt: bool = True, save_fig: bool = True,
+                      filename_to_save: str = 'Darwin_curve'
+) -> tuple[
+    NDArray[np.float64],  # delta_theta
+    NDArray[np.float64],  # R
+    float,                # zeta_total
+    float,                # zeta_FWHM
+    float,                # w_total
+    float,                # w_FWHM
+    float                 # w0
+]:
     
     '''
     Calculates the Darwin curve. It does not considers absortion. Valid for s-polarization only.
