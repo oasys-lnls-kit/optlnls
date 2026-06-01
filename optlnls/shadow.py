@@ -662,7 +662,22 @@ def plot_caustic(caustic, caustic_dict, figprefix='', cmap='viridis'):
     
     
             
-def run_shadow_caustic(filename, beam, zStart, zFin, nz, zOffset, colh, colv, colref, nbinsh, nbinsv, xrange, yrange):
+def run_shadow_caustic(
+    filename,
+    beam,
+    zStart,
+    zFin,
+    nz,
+    zOffset,
+    colh,
+    colv,
+    colref,
+    nbinsh,
+    nbinsv,
+    xrange,
+    yrange,
+    inmost_outmost: int = 0,
+):
 
     t0 = time.time()
     good_rays = beam.nrays(nolost=1)
@@ -701,7 +716,17 @@ def run_shadow_caustic(filename, beam, zStart, zFin, nz, zOffset, colh, colv, co
         # histo['good_rays'] = beam.nrays(nolost=1)
         
         histo = beam.histo2(col_h=colh, col_v=colv, nbins_h=nbinsh, nbins_v=nbinsv, nolost=1, ref=colref, xrange=xrange, yrange=yrange);
-        append_dataset_hdf5(filename, data=histo, z=z_points[i], nz=nz, tag=i+1, t0=t0, ndigits=len(str(nz)))
+        append_dataset_hdf5(
+            filename,
+            data = histo,
+            z = z_points[i],
+            nz = nz,
+            tag = i+1,
+            t0 = t0,
+            ndigits = len(str(nz)),
+            inmost_outmost = inmost_outmost,
+        )
+    
     read_caustic(filename, write_attributes=True)
 
 
