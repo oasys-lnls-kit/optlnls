@@ -9,7 +9,11 @@ import time
 import h5py
 import os
 import glob
-from typing import Any, Mapping
+from Shadow import Beam
+from typing import Any, Mapping, Union, Sequence
+from numpy.typing import NDArray
+
+FloatingArrayLike = Union[Sequence[float], NDArray[np.floating]]
 
 def calc_und_flux(beam, nbins, eBeamEnergy, eSpread, current, 
                   und_per, und_length, B, min_harmonic, max_harmonic, 
@@ -663,21 +667,88 @@ def plot_caustic(caustic, caustic_dict, figprefix='', cmap='viridis'):
     
             
 def run_shadow_caustic(
-    filename,
-    beam,
-    zStart,
-    zFin,
-    nz,
-    zOffset,
-    colh,
-    colv,
-    colref,
-    nbinsh,
-    nbinsv,
-    xrange,
-    yrange,
+    filename: str,
+    beam: Beam,
+    zStart: float,
+    zFin: float,
+    nz: int,
+    zOffset: float,
+    colh: int,
+    colv: int,
+    colref: int,
+    nbinsh: int,
+    nbinsv: int,
+    xrange: FloatingArrayLike,
+    yrange: FloatingArrayLike,
     inmost_outmost: int = 0,
-):
+) -> None:
+    """
+    Compute a SHADOW3 caustic and store the results in an HDF5 file.
+
+    The beam is retraced through a series of longitudinal positions and
+    analyzed at each step using ``Shadow.Beam.histo2()``. The resulting
+    two-dimensional intensity histograms and derived beam statistics are
+    stored in an HDF5 file initialized by ``initialize_hdf5()``.
+
+    After all propagation steps have been processed, ``read_caustic()`` is
+    called to calculate and store summary caustic attributes.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the output HDF5 file.
+
+    beam : Beam
+        SHADOW3 beam to be propagated and analyzed.
+
+    zStart : float
+        Initial longitudinal position relative to the reference plane.
+
+    zFin : float
+        Final longitudinal position relative to the reference plane.
+
+    nz : int
+        Number of propagation positions to evaluate between ``zStart`` and
+        ``zFin``.
+
+    zOffset : float
+        Longitudinal offset added to all propagation positions.
+
+    colh : int
+        SHADOW3 column used as the horizontal coordinate in the histogram.
+
+    colv : int
+        SHADOW3 column used as the vertical coordinate in the histogram.
+
+    colref : int
+        SHADOW3 column used for weighting the histogram. Common values are:
+
+        - ``23``: total intensity.
+        - any other valid column: weight by that column.
+
+    nbinsh : int
+        Number of horizontal histogram bins.
+
+    nbinsv : int
+        Number of vertical histogram bins.
+
+    xrange : FloatingArrayLike
+        Horizontal histogram limits ``[xmin, xmax]``. May be specified as a
+        sequence of floats or a NumPy floating-point array.
+
+    yrange : FloatingArrayLike
+        Vertical histogram limits ``[ymin, ymax]``. May be specified as a
+        sequence of floats or a NumPy floating-point array.
+
+    inmost_outmost : int, optional
+        Mode passed to ``get_fwhm()`` through ``append_dataset_hdf5()``,
+        controlling how the FWHM interval is selected when multiple
+        half-maximum crossings are present.
+
+    Returns
+    -------
+    None
+    """
 
     t0 = time.time()
     good_rays = beam.nrays(nolost=1)
